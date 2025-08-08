@@ -44,19 +44,27 @@
     transition: background-color 0.3s ease;
     width: 100%;
   }
-  button:hover {
+  button:hover:enabled {
     background-color: #d8620c;
+  }
+  button:disabled {
+    background-color: #bfbfbf;
+    cursor: not-allowed;
   }
   #message {
     margin-top: 20px;
     font-weight: 600;
-    color: green;
     min-height: 22px;
   }
   #loginLink {
     margin-top: 15px;
-    display: block;
+    display: none;
     font-size: 0.9rem;
+  }
+  #logoutBtn {
+    background-color: #344ea3;
+    margin-top: 15px;
+    width: 100%;
   }
 </style>
 </head>
@@ -65,9 +73,10 @@
 <div class="payment-container">
   <h2>Unlock All Subjects</h2>
   <p>Pay ₹99 to unlock all NEET PG subjects except Anatomy (which is free).</p>
-  <button id="payBtn">Pay ₹99</button>
+  <button id="payBtn" disabled>Pay ₹99</button>
   <div id="message"></div>
-  <a href="login.html" id="loginLink" style="display:none;">Please login to pay</a>
+  <a href="login.html" id="loginLink">Please login to pay</a>
+  <button id="logoutBtn" style="display:none;">Logout</button>
 </div>
 
 <!-- Firebase SDK -->
@@ -96,18 +105,39 @@
   const payBtn = document.getElementById('payBtn');
   const messageDiv = document.getElementById('message');
   const loginLink = document.getElementById('loginLink');
+  const logoutBtn = document.getElementById('logoutBtn');
 
   let currentUser = null;
 
-  auth.onAuthStateChanged(user => {
+  async function checkPaymentStatus() {
+    if (!currentUser) return;
+
+    try {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if (doc.exists && doc.data().isPaid === true) {
+        payBtn.disabled = true;
+        messageDiv.style.color = 'green';
+        messageDiv.textContent = "You have already paid and unlocked all subjects!";
+      } else {
+        payBtn.disabled = false;
+        messageDiv.textContent = "";
+      }
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+    }
+  }
+
+  auth.onAuthStateChanged(async user => {
     currentUser = user;
     if (user) {
-      payBtn.disabled = false;
       loginLink.style.display = 'none';
-      messageDiv.textContent = '';
+      logoutBtn.style.display = 'block';
+      await checkPaymentStatus();
     } else {
       payBtn.disabled = true;
       loginLink.style.display = 'block';
+      logoutBtn.style.display = 'none';
+      messageDiv.style.color = 'red';
       messageDiv.textContent = 'You need to login to make a payment.';
     }
   });
@@ -136,7 +166,6 @@
           messageDiv.textContent = "Payment successful! You can now access all subjects.";
           payBtn.disabled = true;
 
-          // Optional: Redirect back to homepage after 3 seconds
           setTimeout(() => {
             window.location.href = 'index.html';
           }, 3000);
@@ -157,6 +186,10 @@
 
     const rzp = new Razorpay(options);
     rzp.open();
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    auth.signOut();
   });
 </script>
 
