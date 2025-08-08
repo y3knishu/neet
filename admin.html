@@ -380,25 +380,36 @@
   async function loadQuestions() {
     questionsList.textContent = 'Loading questions...';
     try {
-      const snapshot = await db.collection('questions').orderBy('subject').orderBy('question').get();
+      // Fetch all questions (no orderBy to avoid index error)
+      const snapshot = await db.collection('questions').get();
       if (snapshot.empty) {
         questionsList.textContent = 'No questions found.';
         return;
       }
+      // Map to array and sort client-side by subject then question
+      const questionsArray = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      questionsArray.sort((a, b) => {
+        if (a.subject < b.subject) return -1;
+        if (a.subject > b.subject) return 1;
+        if (a.question < b.question) return -1;
+        if (a.question > b.question) return 1;
+        return 0;
+      });
+
       let html = '';
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        html += `<div class="question-item" data-id="${doc.id}">
+      questionsArray.forEach(data => {
+        html += `<div class="question-item" data-id="${data.id}">
           <strong>[${data.subject}]</strong> ${data.question}<br/>
           Options: ${data.options ? data.options.join(', ') : ''}<br/>
           Correct: ${data.correctAnswer}<br/>
           ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
           <br/>
-          <button onclick="editQuestion('${doc.id}')">Edit</button>
-          <button onclick="deleteQuestion('${doc.id}')">Delete</button>
+          <button onclick="editQuestion('${data.id}')">Edit</button>
+          <button onclick="deleteQuestion('${data.id}')">Delete</button>
         </div>`;
       });
       questionsList.innerHTML = html;
+
     } catch (error) {
       questionsList.textContent = 'Error loading questions: ' + error.message;
     }
