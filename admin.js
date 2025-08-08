@@ -1,226 +1,214 @@
-// Admin panel logic — accessible only if logged-in user email matches ADMIN_EMAIL
-const ADMIN_EMAIL = 'y3knishu@gmail.com';
+const firebaseConfig = {
+  apiKey: "AIzaSyDohygxGWFCQ-Kn2yROr_cviSUcD0drt0M",
+  authDomain: "nishant-website.firebaseapp.com",
+  projectId: "nishant-website",
+  storageBucket: "nishant-website.firebasestorage.app",
+  messagingSenderId: "92337870765",
+  appId: "1:92337870765:web:664418f551133e356fb324",
+  measurementId: "G-08FZCL9GVS"
+};
 
-const adminAreaEl = document.getElementById('adminArea');
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-auth.onAuthStateChanged(async user=>{
-  if(!user) {
-    adminAreaEl.innerHTML = '<p>Please login to access admin panel.</p>';
-    return;
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const adminEmail = "y3knishu@gmail.com";
+const passwordAdmin = "xrnb21r72W@"; // For possible future password auth if you want
+
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const adminEmailSpan = document.getElementById("adminEmail");
+const adminPanel = document.getElementById("adminPanel");
+
+const subjectSelect = document.getElementById("subjectSelect");
+const questionNumberInput = document.getElementById("questionNumber");
+const questionTextInput = document.getElementById("questionText");
+const optionInputs = [
+  document.getElementById("option0"),
+  document.getElementById("option1"),
+  document.getElementById("option2"),
+  document.getElementById("option3"),
+];
+const correctAnswerInput = document.getElementById("correctAnswer");
+const imageUrlInput = document.getElementById("imageUrl");
+const questionForm = document.getElementById("questionForm");
+
+const bulkUploadTextarea = document.getElementById("bulkUploadTextarea");
+const bulkUploadBtn = document.getElementById("bulkUploadBtn");
+
+const questionsTableBody = document.querySelector("#questionsTable tbody");
+
+let editingQuestionId = null;
+let currentUser = null;
+
+function isAdmin(user) {
+  return user && user.email === adminEmail;
+}
+
+function clearForm() {
+  subjectSelect.value = "";
+  questionNumberInput.value = "";
+  questionTextInput.value = "";
+  optionInputs.forEach(input => input.value = "");
+  correctAnswerInput.value = "";
+  imageUrlInput.value = "";
+  editingQuestionId = null;
+}
+
+async function loadQuestions() {
+  questionsTableBody.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+  const snapshot = await db.collection("questions").orderBy("subject").orderBy("questionNumber").get();
+  questionsTableBody.innerHTML = "";
+  snapshot.forEach(doc => {
+    const q = doc.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${q.subject}</td>
+      <td>${q.questionNumber}</td>
+      <td>${q.question.substring(0, 60)}${q.question.length > 60 ? "..." : ""}</td>
+      <td>
+        <button data-id="${doc.id}" class="editBtn">Edit</button>
+        <button data-id="${doc.id}" class="deleteBtn btn-danger">Delete</button>
+      </td>
+    `;
+    questionsTableBody.appendChild(tr);
+  });
+
+  // Add event listeners for edit/delete
+  document.querySelectorAll(".editBtn").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const doc = await db.collection("questions").doc(id).get();
+      if (!doc.exists) return alert("Question not found");
+      const q = doc.data();
+      editingQuestionId = id;
+      subjectSelect.value = q.subject;
+      questionNumberInput.value = q.questionNumber;
+      questionTextInput.value = q.question;
+      q.options.forEach((opt, i) => {
+        if (optionInputs[i]) optionInputs[i].value = opt;
+      });
+      correctAnswerInput.value = q.answer;
+      imageUrlInput.value = q.imageUrl || "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+  });
+
+  document.querySelectorAll(".deleteBtn").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      if (confirm("Are you sure you want to delete this question?")) {
+        await db.collection("questions").doc(id).delete();
+        loadQuestions();
+      }
+    };
+  });
+}
+
+loginBtn.onclick = async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const result = await auth.signInWithPopup(provider);
+    if (!isAdmin(result.user)) {
+      alert("You are not authorized to access admin panel.");
+      await auth.signOut();
+      return;
+    }
+  } catch (e) {
+    alert("Login failed: " + e.message);
   }
-  if(user.email !== ADMIN_EMAIL){
-    adminAreaEl.innerHTML = '<p>Access denied. You are not admin.</p>';
-    return;
+};
+
+logoutBtn.onclick = async () => {
+  await auth.signOut();
+};
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (isAdmin(user)) {
+    adminEmailSpan.textContent = user.email;
+    adminPanel.style.display = "block";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    loadQuestions();
+  } else {
+    adminEmailSpan.textContent = "";
+    adminPanel.style.display = "none";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
   }
-  renderAdmin();
 });
 
-async function renderAdmin(){
-  const subjects = await getSubjects();
-  adminAreaEl.innerHTML = `
-    <h3>Admin — Manage Questions</h3>
-    <div class="admin-form">
-      <label>Choose subject:</label>
-      <select id="subSelect"></select>
+questionForm.onsubmit = async (e) => {
+  e.preventDefault();
+  if (!isAdmin(currentUser)) {
+    alert("Unauthorized");
+    return;
+  }
+  const subject = subjectSelect.value.trim();
+  const questionNumber = Number(questionNumberInput.value);
+  const question = questionTextInput.value.trim();
+  const options = optionInputs.map(i => i.value.trim());
+  const answer = Number(correctAnswerInput.value);
+  const imageUrl = imageUrlInput.value.trim();
 
-      <div id="editor">
-        <label>Question number (qno)</label>
-        <input id="qno" type="number" />
+  if (!subject || !question || options.some(o => o === "") || isNaN(answer) || answer < 0 || answer > 3) {
+    alert("Please fill all fields correctly.");
+    return;
+  }
 
-        <label>Question text</label>
-        <textarea id="qText" rows="3"></textarea>
+  const data = { subject, questionNumber, question, options, answer, imageUrl };
 
-        <div class="row">
-          <div class="col">
-            <label>Option 1</label>
-            <input id="opt0" type="text" />
-          </div>
-          <div class="col">
-            <label>Option 2</label>
-            <input id="opt1" type="text" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="col">
-            <label>Option 3</label>
-            <input id="opt2" type="text" />
-          </div>
-          <div class="col">
-            <label>Option 4</label>
-            <input id="opt3" type="text" />
-          </div>
-        </div>
+  if (editingQuestionId) {
+    await db.collection("questions").doc(editingQuestionId).set(data);
+    alert("Question updated");
+  } else {
+    await db.collection("questions").add(data);
+    alert("Question added");
+  }
+  clearForm();
+  loadQuestions();
+};
 
-        <label>Correct option</label>
-        <select id="correctOpt">
-          <option value="0">Option 1</option>
-          <option value="1">Option 2</option>
-          <option value="2">Option 3</option>
-          <option value="3">Option 4</option>
-        </select>
+bulkUploadBtn.onclick = async () => {
+  if (!isAdmin(currentUser)) {
+    alert("Unauthorized");
+    return;
+  }
+  let bulkData;
+  try {
+    bulkData = JSON.parse(bulkUploadTextarea.value);
+    if (!Array.isArray(bulkData)) throw new Error("JSON should be an array");
+  } catch (e) {
+    alert("Invalid JSON: " + e.message);
+    return;
+  }
 
-        <label>Image URL (optional)</label>
-        <input id="imgUrl" type="text" placeholder="https://..." />
+  if (!confirm(`Are you sure you want to upload ${bulkData.length} questions? This may overwrite existing data.`)) return;
 
-        <div class="controls">
-          <button id="addQ">Add Question</button>
-          <button id="updateQ" class="hidden">Update Question</button>
-          <button id="clearForm">Clear</button>
-        </div>
+  const batch = db.batch();
 
-        <hr />
-        <div class="controls">
-          <input id="bulkFile" type="file" accept="application/json" />
-          <button id="bulkUpload">Bulk Upload (from file)</button>
-          <button id="exportSubject">Export Subject JSON</button>
-          <button id="exportAll">Export All Subjects</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="questionsList" style="margin-top:16px"></div>
-  `;
-
-  const subSelect = document.getElementById('subSelect');
-  subjects.forEach(s=>{ const op = document.createElement('option'); op.value=s.id; op.textContent=s.title; subSelect.appendChild(op); });
-
-  subSelect.addEventListener('change', ()=> loadQuestions(subSelect.value));
-  document.getElementById('addQ').addEventListener('click', ()=> addQuestion(subSelect.value));
-  document.getElementById('updateQ').addEventListener('click', ()=> saveUpdate(subSelect.value));
-  document.getElementById('clearForm').addEventListener('click', clearForm);
-  document.getElementById('bulkUpload').addEventListener('click', ()=> handleBulkFile(subSelect.value));
-  document.getElementById('exportSubject').addEventListener('click', ()=> exportSubjectJSON(subSelect.value));
-  document.getElementById('exportAll').addEventListener('click', exportAllSubjectsJSON);
-
-  // load first subject by default
-  if(subjects[0]) loadQuestions(subjects[0].id);
-}
-
-async function loadQuestions(subId){
-  const qList = document.getElementById('questionsList');
-  qList.innerHTML = 'Loading...';
-  const snap = await db.collection('subjects').doc(subId).collection('questions').orderBy('qno').get();
-  qList.innerHTML = '';
-  snap.forEach(doc=>{
-    const d = doc.data();
-    const div = document.createElement('div'); div.className='admin-q';
-    div.innerHTML = `<strong>Q${d.qno}:</strong> ${escapeHtml(d.q).slice(0,200)} <button data-id="${doc.id}" data-sub="${subId}" class="editBtn">Edit</button> <button data-id="${doc.id}" data-sub="${subId}" class="delBtn">Delete</button>`;
-    qList.appendChild(div);
+  bulkData.forEach((q, idx) => {
+    if (
+      !q.subject || !q.questionNumber || !q.question || !q.options || !Array.isArray(q.options) ||
+      q.options.length !== 4 || typeof q.answer !== "number"
+    ) {
+      console.warn(`Skipping invalid question at index ${idx}`, q);
+      return;
+    }
+    const docRef = db.collection("questions").doc(); // auto ID
+    batch.set(docRef, q);
   });
-  qList.querySelectorAll('.editBtn').forEach(b=> b.addEventListener('click', e=> editQuestion(e.target.dataset.sub, e.target.dataset.id)));
-  qList.querySelectorAll('.delBtn').forEach(b=> b.addEventListener('click', e=> deleteQuestion(e.target.dataset.sub, e.target.dataset.id)));
-}
 
-function escapeHtml(text){ return text ? text.replace(/[&\"'<>]/g, c => ({'&':'&amp;','\"':'&quot;',\"'\":\"&#39;\",'<':'&lt;','>':'&gt;'}[c])) : ''; }
-
-async function addQuestion(subId){
-  const payload = readForm();
-  if(!payload) return;
-  await db.collection('subjects').doc(subId).collection('questions').add(payload);
-  alert('Question added');
-  clearForm();
-  loadQuestions(subId);
-}
-
-let editing = null;
-async function editQuestion(subId, docId){
-  const doc = await db.collection('subjects').doc(subId).collection('questions').doc(docId).get();
-  if(!doc.exists) return alert('Not found');
-  const d = doc.data();
-  document.getElementById('qno').value = d.qno || '';
-  document.getElementById('qText').value = d.q || '';
-  document.getElementById('opt0').value = d.options?.[0] || '';
-  document.getElementById('opt1').value = d.options?.[1] || '';
-  document.getElementById('opt2').value = d.options?.[2] || '';
-  document.getElementById('opt3').value = d.options?.[3] || '';
-  document.getElementById('correctOpt').value = d.answer ?? 0;
-  document.getElementById('imgUrl').value = d.imageUrl || '';
-  editing = {subId, docId};
-  document.getElementById('addQ').classList.add('hidden');
-  document.getElementById('updateQ').classList.remove('hidden');
-}
-
-async function saveUpdate(subId){
-  if(!editing) return;
-  const payload = readForm();
-  if(!payload) return;
-  await db.collection('subjects').doc(editing.subId).collection('questions').doc(editing.docId).set(payload);
-  alert('Updated');
-  editing = null;
-  document.getElementById('addQ').classList.remove('hidden');
-  document.getElementById('updateQ').classList.add('hidden');
-  clearForm();
-  loadQuestions(subId);
-}
-
-function readForm(){
-  const qno = parseInt(document.getElementById('qno').value || '0');
-  const q = document.getElementById('qText').value.trim();
-  const options = [document.getElementById('opt0').value.trim(), document.getElementById('opt1').value.trim(), document.getElementById('opt2').value.trim(), document.getElementById('opt3').value.trim()];
-  const answer = parseInt(document.getElementById('correctOpt').value);
-  const imageUrl = document.getElementById('imgUrl').value.trim();
-  if(!q || options.some(o=>!o)) return alert('Please fill question and all 4 options');
-  return { qno, q, options, answer, imageUrl };
-}
-
-function clearForm(){
-  document.getElementById('qno').value = '';
-  document.getElementById('qText').value = '';
-  document.getElementById('opt0').value = '';
-  document.getElementById('opt1').value = '';
-  document.getElementById('opt2').value = '';
-  document.getElementById('opt3').value = '';
-  document.getElementById('correctOpt').value = '0';
-  document.getElementById('imgUrl').value = '';
-  editing = null;
-  document.getElementById('addQ').classList.remove('hidden');
-  document.getElementById('updateQ').classList.add('hidden');
-}
-
-async function deleteQuestion(subId, docId){
-  if(!confirm('Delete this question?')) return;
-  await db.collection('subjects').doc(subId).collection('questions').doc(docId).delete();
-  alert('Deleted');
-  loadQuestions(subId);
-}
-
-async function handleBulkFile(subId){
-  const f = document.getElementById('bulkFile').files[0];
-  if(!f) return alert('Choose a JSON file');
-  const text = await f.text();
-  let data;
-  try{ data = JSON.parse(text); } catch(e){ return alert('Invalid JSON'); }
-  let arr = [];
-  if(Array.isArray(data)) arr = data;
-  else if(data[subId] && Array.isArray(data[subId])) arr = data[subId];
-  else return alert('JSON must be an array of question objects or an object keyed by subjectId');
-
-  if(!confirm(`Upload ${arr.length} questions to ${subId}?`)) return;
-  for(const item of arr){
-    const payload = { qno: item.qno || 0, q: item.q || '', options: item.options || [], answer: item.answer || 0, imageUrl: item.imageUrl || '' };
-    await db.collection('subjects').doc(subId).collection('questions').add(payload);
+  try {
+    await batch.commit();
+    alert("Bulk upload completed");
+    bulkUploadTextarea.value = "";
+    loadQuestions();
+  } catch (err) {
+    alert("Error uploading bulk questions: " + err.message);
   }
-  alert('Bulk upload complete');
-  loadQuestions(subId);
-}
-
-async function exportSubjectJSON(subId){
-  const snap = await db.collection('subjects').doc(subId).collection('questions').orderBy('qno').get();
-  const arr = [];
-  snap.forEach(d=> arr.push(d.data()));
-  const blob = new Blob([JSON.stringify({[subId]: arr}, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `${subId}_questions.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-
-async function exportAllSubjectsJSON(){
-  const subjects = await getSubjects();
-  const out = {};
-  for(const s of subjects){
-    const snap = await db.collection('subjects').doc(s.id).collection('questions').orderBy('qno').get();
-    const arr = []; snap.forEach(d=> arr.push(d.data())); out[s.id] = arr;
-  }
-  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `all_subjects_questions.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
+};
