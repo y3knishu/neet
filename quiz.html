@@ -1,32 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Minimal Quiz Test</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #question { font-weight: bold; margin-bottom: 10px; }
-    .option-btn { display: block; margin: 6px 0; padding: 8px 12px; cursor: pointer; border: 1px solid #333; border-radius: 4px; }
-    .correct { background-color: #27ae60; color: white; }
-    .wrong { background-color: #e74c3c; color: white; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Minimal Quiz Test</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  #questionText { font-size: 1.2rem; margin-bottom: 15px; }
+  button.option-btn { display: block; margin-bottom: 10px; padding: 10px; width: 100%; font-size: 1rem; }
+  #navButtons { margin-top: 20px; }
+</style>
 </head>
 <body>
 
-<h2>Minimal Quiz Test</h2>
-<div id="loading">Loading questions...</div>
-
-<div id="quiz" style="display:none;">
-  <div id="question"></div>
-  <div id="options"></div>
+<h1>Minimal Quiz Test</h1>
+<div id="questionText">Loading...</div>
+<div id="options"></div>
+<div id="navButtons">
+  <button id="prevBtn">Previous</button>
+  <button id="nextBtn">Next</button>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-  // Your Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -40,71 +38,71 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Change this subject exactly as stored in Firestore (case sensitive)
-  const subject = "Anatomy";
+  const questionTextElem = document.getElementById('questionText');
+  const optionsContainer = document.getElementById('options');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
 
-  async function loadQuestions() {
-    const q = query(collection(db, 'questions'), where('subject', '==', subject));
-    const querySnapshot = await getDocs(q);
+  let questions = [];
+  let currentIndex = 0;
 
-    console.log(`Questions for subject "${subject}":`, querySnapshot.size);
-    if (querySnapshot.size === 0) {
-      alert(`No questions found for subject "${subject}"`);
-      document.getElementById('loading').textContent = 'No questions found.';
+  async function loadAllQuestions() {
+    const qSnapshot = await getDocs(collection(db, 'questions'));
+    if (qSnapshot.empty) {
+      alert("No questions found in 'questions' collection.");
+      questionTextElem.textContent = "No questions found.";
       return;
     }
-
-    const questions = [];
-    querySnapshot.forEach(docSnap => {
+    questions = [];
+    console.log("All questions in Firestore:");
+    qSnapshot.forEach(docSnap => {
       const data = docSnap.data();
-      questions.push(data);
-      console.log('Question data:', data);
-    });
-
-    document.getElementById('loading').style.display = 'none';
-    startQuiz(questions);
-  }
-
-  function startQuiz(questions) {
-    const quizDiv = document.getElementById('quiz');
-    const questionDiv = document.getElementById('question');
-    const optionsDiv = document.getElementById('options');
-
-    let currentQuestionIndex = 0;
-
-    function showQuestion(index) {
-      const q = questions[index];
-      questionDiv.textContent = q.question;
-
-      optionsDiv.innerHTML = '';
-      q.options.forEach((opt, idx) => {
-        const btn = document.createElement('button');
-        btn.textContent = opt;
-        btn.className = 'option-btn';
-
-        btn.onclick = () => {
-          // Disable all buttons after click
-          Array.from(optionsDiv.children).forEach(b => b.disabled = true);
-
-          if (idx === Number(q.correctAnswer)) {
-            btn.classList.add('correct');
-            alert('Correct!');
-          } else {
-            btn.classList.add('wrong');
-            alert(`Wrong! Correct answer is option ${q.correctAnswer}`);
-          }
-        };
-
-        optionsDiv.appendChild(btn);
+      console.log(`ID: ${docSnap.id} | Subject: ${data.subject} | Question: ${data.question}`);
+      questions.push({
+        id: docSnap.id,
+        question: data.question,
+        options: data.options,
+        correctOption: data.correctOption
       });
-    }
-
-    quizDiv.style.display = 'block';
-    showQuestion(currentQuestionIndex);
+    });
+    showQuestion();
   }
 
-  loadQuestions();
-</script>
+  function showQuestion() {
+    if (questions.length === 0) return;
+    const q = questions[currentIndex];
+    questionTextElem.textContent = `Q${currentIndex + 1}: ${q.question}`;
+    optionsContainer.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      optionsContainer.appendChild(btn);
+    });
+    updateNavButtons();
+  }
 
+  function updateNavButtons() {
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex === questions.length - 1;
+  }
+
+  prevBtn.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      showQuestion();
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (currentIndex < questions.length - 1) {
+      currentIndex++;
+      showQuestion();
+    }
+  });
+
+  loadAllQuestions();
+
+</script>
 </body>
 </html>
