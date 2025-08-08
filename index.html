@@ -1,64 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NEET PG Quiz - Subjects</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-  h1 { text-align: center; color: #344ea3; }
-  .year-group { margin-bottom: 40px; }
-  .year-title { font-size: 1.5rem; margin-bottom: 15px; color: #222; border-bottom: 2px solid #344ea3; padding-bottom: 5px; }
-  #subjectCardsContainer { display: flex; flex-wrap: wrap; gap: 15px; }
-  .subject-card {
-    flex: 1 1 180px; max-width: 180px; padding: 15px; border-radius: 12px; color: white; cursor: pointer;
-    box-shadow: 0 3px 8px rgb(0 0 0 / 0.2); user-select: none; transition: transform 0.2s ease;
-    background: linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet);
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-  }
-  .subject-card.locked { filter: grayscale(80%); cursor: not-allowed; opacity: 0.6; }
-  .subject-card:hover:not(.locked) { transform: scale(1.05); box-shadow: 0 6px 15px rgb(0 0 0 / 0.4); }
-  .subject-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; text-align: center; }
-  .label { padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
-  .label.free { background-color: #27ae60; }
-  .label.locked { background-color: #7f8c8d; }
-  #loginStatus { text-align: center; margin-bottom: 20px; }
-  #loginStatus button {
-    padding: 8px 15px; font-size: 1rem; border: none; border-radius: 6px;
-    cursor: pointer; margin-left: 10px; background: #344ea3; color: white;
-  }
-  #whatsappHelp {
-    position: fixed; bottom: 25px; right: 25px; background-color: #25d366; width: 60px; height: 60px;
-    border-radius: 50%; box-shadow: 0 4px 10px rgb(0 0 0 / 0.3);
-    display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 999;
-  }
-  #whatsappHelp img { width: 35px; height: 35px; }
-</style>
-</head>
-<body>
+<!-- Add this in <head> or before </body> -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-<h1>NEET PG Quiz Subjects</h1>
+<div id="subjectContainer"></div>
 
-<div id="loginStatus">
-  <span id="userEmail"></span>
-  <button id="btnLogin">Login</button>
-  <button id="btnLogout" style="display:none;">Logout</button>
-</div>
-
-<div id="yearGroupsContainer"></div>
-
-<!-- WhatsApp Help Floating Button -->
-<a id="whatsappHelp" href="https://wa.me/919431328569" target="_blank" title="Get Help on WhatsApp">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
-</a>
-
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // Firebase config - replace with your config
+  // Your firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -69,140 +19,160 @@
     measurementId: "G-GEG090K2JQ"
   };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  const subjectsByYear = {
-    "1st Year": [
-      { name: "Anatomy", free: true },
-      { name: "Physiology", free: false },
-      { name: "Biochemistry", free: false }
-    ],
-    "2nd Year": [
-      { name: "Pathology", free: false },
-      { name: "Pharmacology", free: false },
-      { name: "Microbiology", free: false },
-      { name: "Forensic Medicine", free: false }
-    ],
-    "3rd Year": [
-      { name: "Community Medicine", free: false },
-      { name: "ENT", free: false },
-      { name: "Ophthalmology", free: false }
-    ],
-    "Final Year": [
-      { name: "General Medicine", free: false },
-      { name: "General Surgery", free: false },
-      { name: "Obstetrics & Gynaecology", free: false },
-      { name: "Pediatrics", free: false },
-      { name: "Orthopaedics", free: false },
-      { name: "Dermatology", free: false },
-      { name: "Psychiatry", free: false },
-      { name: "Respiratory Medicine", free: false },
-      { name: "Anesthesiology", free: false }
-    ]
-  };
+  const razorpayKey = "rzp_live_7nZptAUoDrsfRb";
 
-  const yearGroupsContainer = document.getElementById('yearGroupsContainer');
-  const userEmailSpan = document.getElementById('userEmail');
-  const btnLogin = document.getElementById('btnLogin');
-  const btnLogout = document.getElementById('btnLogout');
+  const subjects = [
+    { name: "Anatomy", year: "1st Year", color: "#f44336" },
+    { name: "Physiology", year: "1st Year", color: "#e91e63" },
+    { name: "Biochemistry", year: "1st Year", color: "#9c27b0" },
+    { name: "Pathology", year: "2nd Year", color: "#673ab7" },
+    { name: "Pharmacology", year: "2nd Year", color: "#3f51b5" },
+    { name: "Microbiology", year: "2nd Year", color: "#2196f3" },
+    { name: "Forensic Medicine", year: "2nd Year", color: "#03a9f4" },
+    { name: "Community Medicine", year: "3rd Year", color: "#00bcd4" },
+    { name: "ENT", year: "3rd Year", color: "#009688" },
+    { name: "Ophthalmology", year: "3rd Year", color: "#4caf50" },
+    { name: "General Medicine", year: "Final Year", color: "#8bc34a" },
+    { name: "General Surgery", year: "Final Year", color: "#cddc39" },
+    { name: "Obstetrics & Gynaecology", year: "Final Year", color: "#ffeb3b" },
+    { name: "Pediatrics", year: "Final Year", color: "#ffc107" },
+    { name: "Orthopaedics", year: "Final Year", color: "#ff9800" },
+    { name: "Dermatology", year: "Final Year", color: "#ff5722" },
+    { name: "Psychiatry", year: "Final Year", color: "#795548" },
+    { name: "Respiratory Medicine", year: "Final Year", color: "#9e9e9e" },
+    { name: "Anesthesiology", year: "Final Year", color: "#607d8b" }
+  ];
 
-  let currentUser = null;
-  let userHasPaid = false;
+  const subjectContainer = document.getElementById("subjectContainer");
 
-  function createSubjectCard(subject) {
-    const card = document.createElement('div');
-    card.classList.add('subject-card');
+  function createSubjectCard(subject, unlocked) {
+    const card = document.createElement("div");
+    card.style.backgroundColor = subject.color;
+    card.style.color = "#fff";
+    card.style.padding = "20px";
+    card.style.margin = "10px";
+    card.style.borderRadius = "12px";
+    card.style.width = "220px";
+    card.style.display = "inline-block";
+    card.style.position = "relative";
+    card.style.textAlign = "center";
+    card.style.cursor = unlocked ? "pointer" : "default";
 
-    const isLocked = !(subject.free || (currentUser && userHasPaid));
-    if (isLocked) card.classList.add('locked');
+    card.innerHTML = `<h3>${subject.name}</h3><small>${subject.year}</small>`;
 
-    card.innerHTML = `
-      <div class="subject-name">${subject.name}</div>
-      <div class="label ${subject.free ? 'free' : 'locked'}">${subject.free ? 'Free' : 'Locked'}</div>
-    `;
+    if (!unlocked) {
+      // Lock overlay and pay button
+      const lockOverlay = document.createElement("div");
+      lockOverlay.style.position = "absolute";
+      lockOverlay.style.top = 0;
+      lockOverlay.style.left = 0;
+      lockOverlay.style.width = "100%";
+      lockOverlay.style.height = "100%";
+      lockOverlay.style.background = "rgba(0,0,0,0.6)";
+      lockOverlay.style.borderRadius = "12px";
+      lockOverlay.style.display = "flex";
+      lockOverlay.style.flexDirection = "column";
+      lockOverlay.style.justifyContent = "center";
+      lockOverlay.style.alignItems = "center";
+      lockOverlay.style.color = "white";
 
-    if (!isLocked) {
-      card.addEventListener('click', () => {
-        // Redirect to quiz page with subject param (lowercase, no spaces)
-        const subjectParam = subject.name.toLowerCase().replace(/ & /g, '_').replace(/\s+/g, '_');
-        window.location.href = `quiz.html?subject=${encodeURIComponent(subjectParam)}`;
-      });
+      const lockIcon = document.createElement("div");
+      lockIcon.innerHTML = "🔒";
+      lockIcon.style.fontSize = "36px";
+      lockOverlay.appendChild(lockIcon);
+
+      const payBtn = document.createElement("button");
+      payBtn.textContent = "Pay ₹99 to Unlock";
+      payBtn.style.marginTop = "12px";
+      payBtn.style.padding = "8px 12px";
+      payBtn.style.border = "none";
+      payBtn.style.borderRadius = "6px";
+      payBtn.style.backgroundColor = "#f44336";
+      payBtn.style.color = "#fff";
+      payBtn.style.cursor = "pointer";
+
+      payBtn.onclick = () => openRazorpayCheckout();
+
+      lockOverlay.appendChild(payBtn);
+      card.appendChild(lockOverlay);
     } else {
-      card.title = 'Unlock by signing in and paying ₹99 (except Anatomy)';
+      card.onclick = () => {
+        // Redirect to quiz page with subject param
+        window.location.href = `quiz.html?subject=${encodeURIComponent(subject.name)}`;
+      };
     }
+
     return card;
   }
 
-  function renderYearGroup(year, subjects) {
-    const groupDiv = document.createElement('div');
-    groupDiv.classList.add('year-group');
+  function renderSubjects(isPaid) {
+    subjectContainer.innerHTML = "";
 
-    const title = document.createElement('h2');
-    title.classList.add('year-title');
-    title.textContent = year;
-    groupDiv.appendChild(title);
+    // Group by year
+    const years = [...new Set(subjects.map(s => s.year))];
 
-    const cardsContainer = document.createElement('div');
-    cardsContainer.id = 'subjectCardsContainer';
+    years.forEach(year => {
+      const yearHeader = document.createElement("h2");
+      yearHeader.textContent = year;
+      subjectContainer.appendChild(yearHeader);
 
-    subjects.forEach(subj => {
-      const card = createSubjectCard(subj);
-      cardsContainer.appendChild(card);
+      const yearSubjects = subjects.filter(s => s.year === year);
+
+      yearSubjects.forEach(subject => {
+        const unlocked = subject.name === "Anatomy" || isPaid;
+        const card = createSubjectCard(subject, unlocked);
+        subjectContainer.appendChild(card);
+      });
     });
-
-    groupDiv.appendChild(cardsContainer);
-    yearGroupsContainer.appendChild(groupDiv);
   }
 
-  function renderAllSubjects() {
-    yearGroupsContainer.innerHTML = '';
-    for (const [year, subjects] of Object.entries(subjectsByYear)) {
-      renderYearGroup(year, subjects);
+  function openRazorpayCheckout() {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please login to pay.");
+      return;
     }
-  }
 
-  // Auth state observer
-  auth.onAuthStateChanged(async (user) => {
-    currentUser = user;
-    if (user) {
-      userEmailSpan.textContent = `Logged in as: ${user.email}`;
-      btnLogin.style.display = 'none';
-      btnLogout.style.display = 'inline-block';
-
-      // Check if user has paid
-      try {
-        const docRef = db.collection('users').doc(user.uid);
-        const docSnap = await docRef.get();
-        userHasPaid = docSnap.exists && docSnap.data().isPaid === true;
-      } catch (error) {
-        console.error('Error fetching payment status:', error);
-        userHasPaid = false;
+    const options = {
+      key: razorpayKey,
+      amount: 9900, // ₹99 in paise
+      currency: "INR",
+      name: "NEET PG Quiz",
+      description: "Unlock all subjects except Anatomy",
+      handler: function (response) {
+        alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+        // Update Firestore user document isPaid flag
+        db.collection('users').doc(user.uid).set({ isPaid: true }, { merge: true })
+          .then(() => {
+            renderSubjects(true);
+          })
+          .catch(err => alert("Failed to update payment status: " + err.message));
+      },
+      prefill: {
+        email: user.email,
+      },
+      theme: {
+        color: "#344ea3"
       }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      db.collection('users').doc(user.uid).get()
+        .then(doc => {
+          const isPaid = doc.exists && doc.data().isPaid;
+          renderSubjects(isPaid);
+        })
+        .catch(() => renderSubjects(false));
     } else {
-      userEmailSpan.textContent = 'Not logged in';
-      btnLogin.style.display = 'inline-block';
-      btnLogout.style.display = 'none';
-      userHasPaid = false;
+      renderSubjects(false);
     }
-
-    renderAllSubjects();
   });
-
-  btnLogin.addEventListener('click', () => {
-    // Redirect to login page or open login popup
-    window.location.href = 'login.html';
-  });
-
-  btnLogout.addEventListener('click', () => {
-    auth.signOut();
-  });
-
-  // Initial render before auth state resolved
-  renderAllSubjects();
 </script>
-
-</body>
-</html>
