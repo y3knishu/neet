@@ -7,7 +7,6 @@ const firebaseConfig = {
   appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
   measurementId: "G-GEG090K2JQ"
 };
-
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -70,7 +69,7 @@ async function loadQuestions() {
       <td>${q.question.substring(0, 60)}${q.question.length > 60 ? "..." : ""}</td>
       <td>
         <button data-id="${doc.id}" class="editBtn">Edit</button>
-        <button data-id="${doc.id}" class="deleteBtn btn-danger">Delete</button>
+        <button data-id="${doc.id}" class="deleteBtn" style="color:red;">Delete</button>
       </td>
     `;
     questionsTableBody.appendChild(tr);
@@ -128,85 +127,71 @@ auth.onAuthStateChanged(user => {
   currentUser = user;
   if (isAdmin(user)) {
     adminEmailSpan.textContent = user.email;
-    adminPanel.style.display = "block";
     loginBtn.style.display = "none";
     logoutBtn.style.display = "inline-block";
+    adminPanel.style.display = "block";
     loadQuestions();
   } else {
     adminEmailSpan.textContent = "";
-    adminPanel.style.display = "none";
     loginBtn.style.display = "inline-block";
     logoutBtn.style.display = "none";
+    adminPanel.style.display = "none";
   }
 });
 
-questionForm.onsubmit = async (e) => {
+questionForm.onsubmit = async e => {
   e.preventDefault();
   if (!isAdmin(currentUser)) {
-    alert("Unauthorized");
+    alert("Not authorized");
     return;
   }
-  const subject = subjectSelect.value.trim();
-  const questionNumber = Number(questionNumberInput.value);
-  const question = questionTextInput.value.trim();
-  const options = optionInputs.map(i => i.value.trim());
-  const answer = Number(correctAnswerInput.value);
-  const imageUrl = imageUrlInput.value.trim();
-
-  if (!subject || !question || options.some(o => o === "") || isNaN(answer) || answer < 0 || answer > 3) {
-    alert("Please fill all fields correctly.");
-    return;
-  }
-
-  const data = { subject, questionNumber, question, options, answer, imageUrl };
-
+  const data = {
+    subject: subjectSelect.value,
+    questionNumber: Number(questionNumberInput.value),
+    question: questionTextInput.value.trim(),
+    options: optionInputs.map(input => input.value.trim()),
+    answer: Number(correctAnswerInput.value),
+    imageUrl: imageUrlInput.value.trim(),
+  };
   if (editingQuestionId) {
     await db.collection("questions").doc(editingQuestionId).set(data);
-    alert("Question updated");
   } else {
     await db.collection("questions").add(data);
-    alert("Question added");
   }
+  alert("Question saved!");
   clearForm();
   loadQuestions();
 };
 
+document.getElementById("resetFormBtn").onclick = () => {
+  clearForm();
+};
+
 bulkUploadBtn.onclick = async () => {
   if (!isAdmin(currentUser)) {
-    alert("Unauthorized");
+    alert("Not authorized");
     return;
   }
-  let bulkData;
   try {
-    bulkData = JSON.parse(bulkUploadTextarea.value);
-    if (!Array.isArray(bulkData)) throw new Error("JSON should be an array");
-  } catch (e) {
-    alert("Invalid JSON: " + e.message);
-    return;
-  }
-
-  if (!confirm(`Are you sure you want to upload ${bulkData.length} questions? This may overwrite existing data.`)) return;
-
-  const batch = db.batch();
-
-  bulkData.forEach((q, idx) => {
-    if (
-      !q.subject || !q.questionNumber || !q.question || !q.options || !Array.isArray(q.options) ||
-      q.options.length !== 4 || typeof q.answer !== "number"
-    ) {
-      console.warn(`Skipping invalid question at index ${idx}`, q);
-      return;
-    }
-    const docRef = db.collection("questions").doc(); // auto ID
-    batch.set(docRef, q);
-  });
-
-  try {
+    const questionsArray = JSON.parse(bulkUploadTextarea.value);
+    if (!Array.isArray(questionsArray)) throw new Error("Invalid JSON array");
+    const batch = db.batch();
+    questionsArray.forEach(q => {
+      const docRef = db.collection("questions").doc();
+      batch.set(docRef, {
+        subject: q.subject,
+        questionNumber: q.questionNumber,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        imageUrl: q.imageUrl || "",
+      });
+    });
     await batch.commit();
-    alert("Bulk upload completed");
+    alert("Bulk upload successful!");
     bulkUploadTextarea.value = "";
     loadQuestions();
-  } catch (err) {
-    alert("Error uploading bulk questions: " + err.message);
+  } catch (e) {
+    alert("Bulk upload error: " + e.message);
   }
 };
