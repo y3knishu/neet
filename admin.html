@@ -50,15 +50,6 @@
     font-size: 0.9rem;
   }
   #errorMsg { color: red; margin-top: 10px; }
-  #logoutBtn {
-    float: right;
-    background: #c0392b;
-  }
-  #googleSignInBtn {
-    background-color: #db4437;
-    margin-top: 10px;
-    width: 100%;
-  }
 </style>
 </head>
 <body>
@@ -72,15 +63,11 @@
   <label for="adminPasswordInput">Password:</label>
   <input type="password" id="adminPasswordInput" placeholder="Enter password" required />
   <button id="adminLoginBtn">Login</button>
-
-  <div style="text-align:center; margin:15px 0; font-weight:bold; color:#555;">OR</div>
-  <button id="googleSignInBtn">Sign in with Google</button>
-
   <div id="errorMsg"></div>
 </div>
 
 <div id="adminPanel" style="display:none;">
-  <button id="logoutBtn">Logout</button>
+  <button id="logoutBtn" style="float:right; background:#c0392b;">Logout</button>
 
   <form id="questionForm">
     <label for="subjectSelect">Select Subject:</label>
@@ -117,20 +104,20 @@
     <label for="questionInput">Question:</label>
     <textarea id="questionInput" required></textarea>
 
-    <label for="option1">Option 1:</label>
+    <label for="option1">Option A:</label>
     <input type="text" id="option1" required />
 
-    <label for="option2">Option 2:</label>
+    <label for="option2">Option B:</label>
     <input type="text" id="option2" required />
 
-    <label for="option3">Option 3:</label>
+    <label for="option3">Option C:</label>
     <input type="text" id="option3" required />
 
-    <label for="option4">Option 4:</label>
+    <label for="option4">Option D:</label>
     <input type="text" id="option4" required />
 
-    <label for="correctAnswer">Correct Answer (must exactly match one option):</label>
-    <input type="text" id="correctAnswer" required />
+    <label for="correctAnswer">Correct Answer (A, B, C, or D):</label>
+    <input type="text" id="correctAnswer" maxlength="1" required />
 
     <label for="imageUrl">Image URL (optional):</label>
     <input type="text" id="imageUrl" placeholder="https://example.com/image.png" />
@@ -170,8 +157,8 @@
   const auth = firebase.auth();
 
   const adminEmail = 'y3knishu@gmail.com';
+  const adminPassword = 'xrnb21r72W@';
 
-  // UI elements
   const loginContainer = document.getElementById('loginContainer');
   const adminPanel = document.getElementById('adminPanel');
   const errorMsg = document.getElementById('errorMsg');
@@ -179,12 +166,11 @@
   const adminEmailInput = document.getElementById('adminEmailInput');
   const adminPasswordInput = document.getElementById('adminPasswordInput');
   const adminLoginBtn = document.getElementById('adminLoginBtn');
-  const googleSignInBtn = document.getElementById('googleSignInBtn');
+
   const logoutBtn = document.getElementById('logoutBtn');
 
   let editDocId = null;
 
-  // Email/password login handler
   adminLoginBtn.addEventListener('click', async () => {
     errorMsg.textContent = '';
     const email = adminEmailInput.value.trim();
@@ -201,74 +187,54 @@
 
     try {
       await auth.signInWithEmailAndPassword(email, password);
-      // onAuthStateChanged will handle UI
+      showAdminPanel();
     } catch (err) {
       if (err.code === 'auth/user-not-found') {
-        // create admin user if not exists
         try {
           await auth.createUserWithEmailAndPassword(email, password);
+          showAdminPanel();
         } catch (signupErr) {
           errorMsg.textContent = signupErr.message;
-          return;
         }
       } else {
         errorMsg.textContent = err.message;
-        return;
       }
     }
   });
 
-  // Google Sign-In handler
-  googleSignInBtn.addEventListener('click', () => {
-    errorMsg.textContent = '';
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-      .then((result) => {
-        if (result.user.email !== adminEmail) {
-          errorMsg.textContent = 'Access denied: Not admin.';
-          auth.signOut();
-        }
-        // else onAuthStateChanged will handle UI
-      })
-      .catch((error) => {
-        errorMsg.textContent = error.message;
-      });
-  });
-
-  // Logout handler
   logoutBtn.addEventListener('click', async () => {
     await auth.signOut();
     resetToLogin();
   });
 
-  // Show admin panel UI
   function showAdminPanel() {
     loginContainer.style.display = 'none';
     adminPanel.style.display = 'block';
     loadQuestions();
   }
 
-  // Reset UI to login form
   function resetToLogin() {
     adminEmailInput.value = '';
     adminPasswordInput.value = '';
     errorMsg.textContent = '';
     loginContainer.style.display = 'block';
     adminPanel.style.display = 'none';
-    editDocId = null;
   }
 
-  // Firebase auth state listener
   auth.onAuthStateChanged(user => {
-    if (user && user.email === adminEmail) {
-      showAdminPanel();
+    if (user) {
+      if (user.email === adminEmail) {
+        showAdminPanel();
+      } else {
+        resetToLogin();
+        auth.signOut();
+      }
     } else {
       resetToLogin();
-      if (user) auth.signOut();
     }
   });
 
-  // --- Question Form & CRUD ---
+  // Question form and CRUD logic
 
   const questionForm = document.getElementById('questionForm');
   const subjectSelect = document.getElementById('subjectSelect');
@@ -297,21 +263,21 @@
 
     const qSubject = subjectSelect.value.trim();
     const qQuestion = questionInput.value.trim();
-    const qOptions = [
-      option1.value.trim(),
-      option2.value.trim(),
-      option3.value.trim(),
-      option4.value.trim()
-    ];
-    const qCorrect = correctAnswer.value.trim();
+    const qOptions = {
+      A: option1.value.trim(),
+      B: option2.value.trim(),
+      C: option3.value.trim(),
+      D: option4.value.trim()
+    };
+    const qCorrect = correctAnswer.value.trim().toUpperCase();
     const qImage = imageUrl.value.trim();
 
-    if (!qSubject || !qQuestion || qOptions.some(opt => !opt) || !qCorrect) {
+    if (!qSubject || !qQuestion || Object.values(qOptions).some(opt => !opt) || !qCorrect) {
       alert('Please fill all required fields.');
       return;
     }
-    if (!qOptions.includes(qCorrect)) {
-      alert('Correct answer must exactly match one of the options.');
+    if (!['A', 'B', 'C', 'D'].includes(qCorrect)) {
+      alert('Correct answer must be one of A, B, C, or D.');
       return;
     }
 
@@ -321,7 +287,7 @@
           subject: qSubject,
           question: qQuestion,
           options: qOptions,
-          correctAnswer: qCorrect,
+          correctOption: qCorrect,
           imageUrl: qImage
         });
         alert('Question updated successfully!');
@@ -330,7 +296,7 @@
           subject: qSubject,
           question: qQuestion,
           options: qOptions,
-          correctAnswer: qCorrect,
+          correctOption: qCorrect,
           imageUrl: qImage
         });
         alert('Question added successfully!');
@@ -361,16 +327,16 @@
     }
 
     for (const q of questionsArray) {
-      if (!q.subject || !q.question || !q.options || !q.correctAnswer) {
-        alert('Each question must have subject, question, options, and correctAnswer fields.');
+      if (!q.subject || !q.question || !q.options || !q.correctOption) {
+        alert('Each question must have subject, question, options, and correctOption fields.');
         return;
       }
-      if (!Array.isArray(q.options) || q.options.length !== 4) {
-        alert('Each question must have exactly 4 options.');
+      if (typeof q.options !== 'object' || !['A','B','C','D'].every(key => key in q.options)) {
+        alert('Each question must have options with keys A, B, C, D.');
         return;
       }
-      if (!q.options.includes(q.correctAnswer)) {
-        alert('Correct answer must exactly match one of the options.');
+      if (!['A','B','C','D'].includes(q.correctOption)) {
+        alert('correctOption must be one of A, B, C, or D.');
         return;
       }
     }
@@ -413,30 +379,23 @@
   async function loadQuestions() {
     questionsList.textContent = 'Loading questions...';
     try {
-      const snapshot = await db.collection('questions').get();
+      // IMPORTANT: Order by subject then question to avoid Firestore index errors
+      const snapshot = await db.collection('questions').orderBy('subject').orderBy('question').get();
       if (snapshot.empty) {
         questionsList.textContent = 'No questions found.';
         return;
       }
-      let questionsArray = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      questionsArray.sort((a, b) => {
-        if (a.subject < b.subject) return -1;
-        if (a.subject > b.subject) return 1;
-        if (a.question < b.question) return -1;
-        if (a.question > b.question) return 1;
-        return 0;
-      });
-
       let html = '';
-      questionsArray.forEach(data => {
-        html += `<div class="question-item" data-id="${data.id}">
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        html += `<div class="question-item" data-id="${doc.id}">
           <strong>[${data.subject}]</strong> ${data.question}<br/>
-          Options: ${data.options ? data.options.join(', ') : ''}<br/>
-          Correct: ${data.correctAnswer}<br/>
+          Options: ${data.options ? Object.entries(data.options).map(([k,v]) => `${k}: ${v}`).join(', ') : ''}<br/>
+          Correct: ${data.correctOption}<br/>
           ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
           <br/>
-          <button onclick="editQuestion('${data.id}')">Edit</button>
-          <button onclick="deleteQuestion('${data.id}')">Delete</button>
+          <button onclick="editQuestion('${doc.id}')">Edit</button>
+          <button onclick="deleteQuestion('${doc.id}')">Delete</button>
         </div>`;
       });
       questionsList.innerHTML = html;
@@ -455,11 +414,11 @@
       const data = doc.data();
       subjectSelect.value = data.subject || '';
       questionInput.value = data.question || '';
-      option1.value = data.options && data.options[0] || '';
-      option2.value = data.options && data.options[1] || '';
-      option3.value = data.options && data.options[2] || '';
-      option4.value = data.options && data.options[3] || '';
-      correctAnswer.value = data.correctAnswer || '';
+      option1.value = data.options && data.options.A || '';
+      option2.value = data.options && data.options.B || '';
+      option3.value = data.options && data.options.C || '';
+      option4.value = data.options && data.options.D || '';
+      correctAnswer.value = data.correctOption || '';
       imageUrl.value = data.imageUrl || '';
       editDocId = docId;
       saveQuestionBtn.textContent = 'Update Question';
