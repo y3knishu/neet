@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin Panel - NEET PG Quiz</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0 20px;
+    background: #f0f4f8;
+    color: #222;
+  }
+  header {
+    padding: 15px 0;
+    border-bottom: 2px solid #344ea3;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 {
+    color: #344ea3;
+  }
+  #logoutBtn {
+    background: #c0392b;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #logoutBtn:hover {
+    background: #e74c3c;
+  }
+  #loginSection, #adminPanel {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  }
+  input[type="email"], input[type="password"], select, textarea, input[type="text"], input[type="file"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin: 8px 0 16px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  label {
+    font-weight: bold;
+  }
+  button {
+    background: #344ea3;
+    border: none;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  button:hover {
+    background: #1e2a78;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background: #344ea3;
+    color: white;
+  }
+  .action-btn {
+    background: #e67e22;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 5px;
+  }
+  .action-btn.delete {
+    background: #c0392b;
+  }
+  .action-btn:hover {
+    opacity: 0.9;
+  }
+  .hidden {
+    display: none;
+  }
+  #bulkUploadSection {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+    padding-top: 15px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NEET PG Admin Panel</h1>
+  <button id="logoutBtn" class="hidden">Logout</button>
+</header>
+
+<!-- Login Section -->
+<div id="loginSection">
+  <h2>Admin Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email" />
+  <input type="password" id="loginPassword" placeholder="Password" />
+  <button id="loginBtn">Login</button>
+  <button id="googleLoginBtn">Login with Google</button>
+  <p id="loginMessage" style="color:red;"></p>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="hidden">
+  <h2>Manage Questions</h2>
+
+  <label for="subjectSelect">Select Subject</label>
+  <select id="subjectSelect" required>
+    <option value="">--Select Subject--</option>
+    <optgroup label="1st Year">
+      <option value="anatomy">Anatomy</option>
+      <option value="physiology">Physiology</option>
+      <option value="biochemistry">Biochemistry</option>
+    </optgroup>
+    <optgroup label="2nd Year">
+      <option value="pathology">Pathology</option>
+      <option value="pharmacology">Pharmacology</option>
+      <option value="microbiology">Microbiology</option>
+      <option value="forensic medicine">Forensic Medicine</option>
+    </optgroup>
+    <optgroup label="3rd Year">
+      <option value="community medicine">Community Medicine</option>
+      <option value="ent">ENT</option>
+      <option value="ophthalmology">Ophthalmology</option>
+    </optgroup>
+    <optgroup label="Final Year">
+      <option value="general medicine">General Medicine</option>
+      <option value="general surgery">General Surgery</option>
+      <option value="obstetrics & gynaecology">Obstetrics & Gynaecology</option>
+      <option value="pediatrics">Pediatrics</option>
+      <option value="orthopaedics">Orthopaedics</option>
+      <option value="dermatology">Dermatology</option>
+      <option value="psychiatry">Psychiatry</option>
+      <option value="respiratory medicine">Respiratory Medicine</option>
+      <option value="anesthesiology">Anesthesiology</option>
+    </optgroup>
+  </select>
+
+  <h3>Add / Edit Question</h3>
+  <form id="questionForm">
+    <label>Question Text:</label>
+    <textarea id="questionText" rows="3" required></textarea>
+
+    <label>Image URL (optional):</label>
+    <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" />
+
+    <label>Options (Enter exactly 4 options):</label>
+    <input type="text" id="option0" placeholder="Option 1" required />
+    <input type="text" id="option1" placeholder="Option 2" required />
+    <input type="text" id="option2" placeholder="Option 3" required />
+    <input type="text" id="option3" placeholder="Option 4" required />
+
+    <label>Correct Option (0-based index):</label>
+    <input type="number" id="correctOption" min="0" max="3" required />
+
+    <input type="hidden" id="editQuestionId" />
+
+    <button type="submit">Save Question</button>
+    <button type="button" id="cancelEditBtn" class="hidden">Cancel Edit</button>
+  </form>
+
+  <h3>All Questions</h3>
+  <table id="questionsTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Question</th>
+        <th>Subject</th>
+        <th>Image</th>
+        <th>Options</th>
+        <th>Correct Option</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="bulkUploadSection">
+    <h3>Bulk Upload Questions (JSON file)</h3>
+    <input type="file" id="bulkUploadInput" accept=".json" />
+    <button id="bulkUploadBtn">Upload</button>
+    <h3>Export All Questions</h3>
+    <button id="exportBtn">Export as JSON</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+    authDomain: "neet-88499.firebaseapp.com",
+    projectId: "neet-88499",
+    storageBucket: "neet-88499.firebasestorage.app",
+    messagingSenderId: "889163298965",
+    appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+    measurementId: "G-GEG090K2JQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Elements
+  const loginSection = document.getElementById('loginSection');
+  const loginEmail = document.getElementById('loginEmail');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginBtn = document.getElementById('loginBtn');
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
+  const loginMessage = document.getElementById('loginMessage');
+
+  const adminPanel = document.getElementById('adminPanel');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const subjectSelect = document.getElementById('subjectSelect');
+  const questionForm = document.getElementById('questionForm');
+  const questionText = document.getElementById('questionText');
+  const imageUrl = document.getElementById('imageUrl');
+  const option0 = document.getElementById('option0');
+  const option1 = document.getElementById('option1');
+  const option2 = document.getElementById('option2');
+  const option3 = document.getElementById('option3');
+  const correctOption = document.getElementById('correctOption');
+  const editQuestionId = document.getElementById('editQuestionId');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+  const questionsTableBody = document.querySelector('#questionsTable tbody');
+
+  const bulkUploadInput = document.getElementById('bulkUploadInput');
+  const bulkUploadBtn = document.getElementById('bulkUploadBtn');
+  const exportBtn = document.getElementById('exportBtn');
+
+  // Admin email allowed
+  const ADMIN_EMAIL = 'y3knishu@gmail.com';
+
+  let questionsList = [];
+
+  // --- Authentication ---
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      if (user.email !== ADMIN_EMAIL) {
+        loginMessage.textContent = 'Access denied. You are not admin.';
+        signOut(auth);
+        showLogin();
+      } else {
+        showAdminPanel();
+        loadQuestions();
+      }
+    } else {
+      showLogin();
+    }
+  });
+
+  function showLogin() {
+    loginSection.style.display = 'block';
+    adminPanel.style.display = 'none';
+    logoutBtn.classList.add('hidden');
+  }
+  function showAdminPanel() {
+    loginSection.style.display = 'none';
+    adminPanel.style.display = 'block';
+    logoutBtn.classList.remove('hidden');
+  }
+
+  loginBtn.onclick = async () => {
+    loginMessage.textContent = '';
+    const email = loginEmail.value.trim();
+    const pass = loginPassword.value.trim();
+    if (!email || !pass) {
+      loginMessage.textContent = 'Email and password required.';
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      loginMessage.textContent = 'Login failed: ' + e.message;
+    }
+  };
+
+  googleLoginBtn.onclick = async () => {
+    loginMessage.textContent = '';
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      loginMessage.textContent = 'Google login failed: ' + e.message;
+    }
+  };
+
+  logoutBtn.onclick = () => {
+    signOut(auth);
+  };
+
+  // --- Load Questions ---
+
+  async function loadQuestions() {
+    questionsTableBody.innerHTML = '';
+    questionsList = [];
+    try {
+      const querySnapshot = await getDocs(collection(db, 'questions'));
+      querySnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+        questionsList.push({ id, ...data });
+      });
+      renderQuestionsTable();
+    } catch (e) {
+      alert('Error loading questions: ' + e.message);
+    }
+  }
+
+  function renderQuestionsTable() {
+    questionsTableBody.innerHTML = '';
+    questionsList.forEach((q, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td style="max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${q.question}">${q.question}</td>
+        <td>${q.subject}</td>
+        <td>${q.image ? `<a href="${q.image}" target="_blank">View</a>` : '—'}</td>
+        <td><ul style="padding-left: 15px; margin: 0;">
+          ${q.options.map(opt => `<li>${opt}</li>`).join('')}
+        </ul></td>
+        <td>${q.correctOption}</td>
+        <td>
+          <button class="action-btn edit-btn" data-id="${q.id}">Edit</button>
+          <button class="action-btn delete-btn delete" data-id="${q.id}">Delete</button>
+        </td>
+      `;
+      questionsTableBody.appendChild(tr);
+    });
+
+    // Attach edit/delete handlers
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.onclick = () => {
+        const qid = btn.getAttribute('data-id');
+        startEditQuestion(qid);
+      };
+    });
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const qid = btn.getAttribute('data-id');
+        if (confirm('Delete this question?')) {
+          await deleteDoc(doc(db, 'questions', qid));
+          await loadQuestions();
+        }
+      };
+    });
+  }
+
+  // --- Add / Edit Question ---
+
+  questionForm.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const subject = subjectSelect.value;
+    const question = questionText.value.trim();
+    const image = imageUrl.value.trim();
+    const options = [
+      option0.value.trim(),
+      option1.value.trim(),
+      option2.value.trim(),
+      option3.value.trim(),
+    ];
+    const correct = parseInt(correctOption.value);
+
+    if (!subject) {
+      alert('Select subject');
+      return;
+    }
+    if (!question) {
+      alert('Question text required');
+      return;
+    }
+    if (options.some(opt => !opt)) {
+      alert('All 4 options are required');
+      return;
+    }
+    if (isNaN(correct) || correct < 0 || correct > 3) {
+      alert('Correct option must be 0, 1, 2 or 3');
+      return;
+    }
+
+    const questionData = { subject, question, image: image || null, options, correctOption: correct };
+
+    const editId = editQuestionId.value;
+    if (editId) {
+      // Update existing
+      try {
+        await updateDoc(doc(db, 'questions', editId), questionData);
+        alert('Question updated');
+      } catch (e) {
+        alert('Update failed: ' + e.message);
+        return;
+      }
+    } else {
+      // Add new
+      try {
+        await addDoc(collection(db, 'questions'), questionData);
+        alert('Question added');
+      } catch (e) {
+        alert('Add failed: ' + e.message);
+        return;
+      }
+    }
+    resetForm();
+    loadQuestions();
+  };
+
+  cancelEditBtn.onclick = () => {
+    resetForm();
+  };
+
+  function startEditQuestion(id) {
+    const q = questionsList.find(q => q.id === id);
+    if (!q) return;
+    subjectSelect.value = q.subject;
+    questionText.value = q.question;
+    imageUrl.value = q.image || '';
+    option0.value = q.options[0];
+    option1.value = q.options[1];
+    option2.value = q.options[2];
+    option3.value = q.options[3];
+    correctOption.value = q.correctOption;
+    editQuestionId.value = q.id;
+    cancelEditBtn.classList.remove('hidden');
+    window.scrollTo(0, 0);
+  }
+
+  function resetForm() {
+    questionForm.reset();
+    editQuestionId.value = '';
+    cancelEditBtn.classList.add('hidden');
+  }
+
+  // --- Bulk Upload ---
+
+  bulkUploadBtn.onclick = () => {
+    const file = bulkUploadInput.files[0];
+    if (!file) {
+      alert('Select a JSON file first');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        const json = JSON.parse(e.target.result);
+        if (!Array.isArray(json)) throw new Error('JSON must be an array');
+        // Validate and add questions
+        for (const q of json) {
+          if (!q.subject || !q.question || !q.options || !Array.isArray(q.options) || q.options.length !== 4 || typeof q.correctOption !== 'number') {
+            alert('Invalid question format in JSON');
+            return;
+          }
+          await addDoc(collection(db, 'questions'), {
+            subject: q.subject.toLowerCase(),
+            question: q.question,
+            image: q.image || null,
+            options: q.options,
+            correctOption: q.correctOption
+          });
+        }
+        alert('Bulk upload completed');
+        bulkUploadInput.value = '';
+        loadQuestions();
+      } catch (err) {
+        alert('Failed to parse JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // --- Export Questions JSON ---
+
+  exportBtn.onclick = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'questions'));
+      const allQuestions = [];
+      querySnapshot.forEach(docSnap => {
+        allQuestions.push(docSnap.data());
+      });
+      const blob = new Blob([JSON.stringify(allQuestions, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+           a.href = url;
+      a.download = 'neet_pg_questions_export.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Error exporting questions: ' + err.message);
+    }
+  };
+</script>
+
+</body>
+</html>
