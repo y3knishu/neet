@@ -30,7 +30,7 @@
   }
   #questionsList {
     margin-top: 30px;
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
     border: 1px solid #ccc;
     background: white;
@@ -63,7 +63,7 @@
   <label for="adminPasswordInput">Password:</label>
   <input type="password" id="adminPasswordInput" placeholder="Enter password" required />
   <button id="adminLoginBtn">Login</button>
-  <button id="googleAdminLoginBtn" style="background:#db4437; margin-top:10px;">Login with Google</button>
+  <button id="googleLoginBtn" style="background:#db4437; margin-top:10px;">Sign in with Google</button>
   <div id="errorMsg"></div>
 </div>
 
@@ -134,41 +134,10 @@
   <button id="exportJsonBtn">Export All Questions to JSON</button>
 
   <h2>Existing Questions</h2>
-  <label for="filterSubjectSelect">Filter by Subject:</label>
-  <select id="filterSubjectSelect">
-    <option value="">-- All Subjects --</option>
-    <optgroup label="1st Year">
-      <option value="Anatomy">Anatomy</option>
-      <option value="Physiology">Physiology</option>
-      <option value="Biochemistry">Biochemistry</option>
-    </optgroup>
-    <optgroup label="2nd Year">
-      <option value="Pathology">Pathology</option>
-      <option value="Pharmacology">Pharmacology</option>
-      <option value="Microbiology">Microbiology</option>
-      <option value="Forensic Medicine">Forensic Medicine</option>
-    </optgroup>
-    <optgroup label="3rd Year">
-      <option value="Community Medicine">Community Medicine</option>
-      <option value="ENT">ENT</option>
-      <option value="Ophthalmology">Ophthalmology</option>
-    </optgroup>
-    <optgroup label="Final Year">
-      <option value="General Medicine">General Medicine</option>
-      <option value="General Surgery">General Surgery</option>
-      <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
-      <option value="Pediatrics">Pediatrics</option>
-      <option value="Orthopaedics">Orthopaedics</option>
-      <option value="Dermatology">Dermatology</option>
-      <option value="Psychiatry">Psychiatry</option>
-      <option value="Respiratory Medicine">Respiratory Medicine</option>
-      <option value="Anesthesiology">Anesthesiology</option>
-    </optgroup>
-  </select>
-
   <div id="questionsList">Loading questions...</div>
 </div>
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -189,7 +158,9 @@
   const auth = firebase.auth();
 
   const adminEmail = 'y3knishu@gmail.com';
+  const adminPassword = 'xrnb21r72W@';
 
+  // Elements
   const loginContainer = document.getElementById('loginContainer');
   const adminPanel = document.getElementById('adminPanel');
   const errorMsg = document.getElementById('errorMsg');
@@ -197,9 +168,10 @@
   const adminEmailInput = document.getElementById('adminEmailInput');
   const adminPasswordInput = document.getElementById('adminPasswordInput');
   const adminLoginBtn = document.getElementById('adminLoginBtn');
-  const googleAdminLoginBtn = document.getElementById('googleAdminLoginBtn');
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
 
+  // Question form inputs
   const questionForm = document.getElementById('questionForm');
   const subjectSelect = document.getElementById('subjectSelect');
   const questionInput = document.getElementById('questionInput');
@@ -211,11 +183,11 @@
   const imageUrl = document.getElementById('imageUrl');
   const saveQuestionBtn = document.getElementById('saveQuestionBtn');
   const resetFormBtn = document.getElementById('resetFormBtn');
+
   const bulkUploadJson = document.getElementById('bulkUploadJson');
   const uploadJsonBtn = document.getElementById('uploadJsonBtn');
   const exportJsonBtn = document.getElementById('exportJsonBtn');
   const questionsList = document.getElementById('questionsList');
-  const filterSubjectSelect = document.getElementById('filterSubjectSelect');
 
   let editDocId = null;
   let editSubject = null;
@@ -237,24 +209,23 @@
 
     try {
       await auth.signInWithEmailAndPassword(email, password);
+      showAdminPanel();
     } catch (err) {
       if (err.code === 'auth/user-not-found') {
-        // Create user on first login
         try {
           await auth.createUserWithEmailAndPassword(email, password);
+          showAdminPanel();
         } catch (signupErr) {
           errorMsg.textContent = signupErr.message;
-          return;
         }
       } else {
         errorMsg.textContent = err.message;
-        return;
       }
     }
   });
 
-  // Login with Google
-  googleAdminLoginBtn.addEventListener('click', async () => {
+  // Google sign-in for admin
+  googleLoginBtn.addEventListener('click', async () => {
     errorMsg.textContent = '';
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
@@ -262,113 +233,42 @@
       if (result.user.email !== adminEmail) {
         errorMsg.textContent = 'Only admin user allowed.';
         await auth.signOut();
+        return;
       }
-    } catch (err) {
-      errorMsg.textContent = err.message;
-    }
-  });
-
-  // Auth state listener
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      if (user.email === adminEmail) {
-        showAdminPanel();
-      } else {
-        errorMsg.textContent = 'Only admin user allowed.';
-        auth.signOut();
-        resetToLogin();
-      }
-    } else {
-      resetToLogin();
+      showAdminPanel();
+    } catch (error) {
+      errorMsg.textContent = error.message;
     }
   });
 
   logoutBtn.addEventListener('click', async () => {
     await auth.signOut();
+    resetToLogin();
   });
 
   function showAdminPanel() {
     loginContainer.style.display = 'none';
     adminPanel.style.display = 'block';
-    loadQuestions(filterSubjectSelect.value);
+    loadQuestions();
   }
 
   function resetToLogin() {
-    loginContainer.style.display = 'block';
-    adminPanel.style.display = 'none';
-    errorMsg.textContent = '';
     adminEmailInput.value = '';
     adminPasswordInput.value = '';
-    questionForm.reset();
-    questionsList.innerHTML = '';
-    editDocId = null;
-    editSubject = null;
+    errorMsg.textContent = '';
+    loginContainer.style.display = 'block';
+    adminPanel.style.display = 'none';
   }
 
-  // Add/edit question form submit
-  questionForm.addEventListener('submit', async e => {
-    e.preventDefault();
-
-    const qSubject = subjectSelect.value.trim();
-    const qQuestion = questionInput.value.trim();
-    const qOptions = [
-      option1.value.trim(),
-      option2.value.trim(),
-      option3.value.trim(),
-      option4.value.trim()
-    ];
-    const qCorrect = correctAnswer.value.trim();
-    const qImage = imageUrl.value.trim();
-
-    if (!qSubject || !qQuestion || qOptions.some(opt => !opt) || !qCorrect) {
-      alert('Please fill all required fields.');
-      return;
-    }
-    if (!qOptions.includes(qCorrect)) {
-      alert('Correct answer must exactly match one of the options.');
-      return;
-    }
-
-    try {
-      const subjectDocRef = db.collection('questions').doc(qSubject);
-      const questionsSubCol = subjectDocRef.collection('subjectQuestions');
-
-      if (editDocId && editSubject) {
-        if (editSubject !== qSubject) {
-          // Delete old and add new under new subject
-          await db.collection('questions').doc(editSubject).collection('subjectQuestions').doc(editDocId).delete();
-          await questionsSubCol.add({
-            question: qQuestion,
-            options: qOptions,
-            correctAnswer: qCorrect,
-            imageUrl: qImage || ''
-          });
-        } else {
-          await questionsSubCol.doc(editDocId).update({
-            question: qQuestion,
-            options: qOptions,
-            correctAnswer: qCorrect,
-            imageUrl: qImage || ''
-          });
-        }
-        alert('Question updated successfully!');
-      } else {
-        await questionsSubCol.add({
-          question: qQuestion,
-          options: qOptions,
-          correctAnswer: qCorrect,
-          imageUrl: qImage || ''
-        });
-        alert('Question added successfully!');
-      }
-      resetFormBtn.click();
-      loadQuestions(filterSubjectSelect.value);
-    } catch (error) {
-      alert('Error saving question: ' + error.message);
+  auth.onAuthStateChanged(user => {
+    if (user && user.email === adminEmail) {
+      showAdminPanel();
+    } else {
+      resetToLogin();
+      if (user) auth.signOut();
     }
   });
 
-  // Reset form button
   resetFormBtn.addEventListener('click', () => {
     questionForm.reset();
     editDocId = null;
@@ -376,77 +276,171 @@
     saveQuestionBtn.textContent = 'Add Question';
   });
 
-  // Load questions filtered by subject or all
-  async function loadQuestions(filterSubject = '') {
-    questionsList.textContent = 'Loading questions...';
+  questionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const subj = subjectSelect.value.trim();
+    const q = questionInput.value.trim();
+    const opts = [
+      option1.value.trim(),
+      option2.value.trim(),
+      option3.value.trim(),
+      option4.value.trim(),
+    ];
+    const corr = correctAnswer.value.trim();
+    const img = imageUrl.value.trim();
+
+    if (!subj || !q || opts.some(o => !o) || !corr) {
+      alert('Please fill all required fields.');
+      return;
+    }
+    if (!opts.includes(corr)) {
+      alert('Correct answer must exactly match one of the options.');
+      return;
+    }
 
     try {
-      let questionsHTML = '';
-
-      if (filterSubject) {
-        // Load questions for one subject only
-        const subjectDocRef = db.collection('questions').doc(filterSubject);
-        const snapshot = await subjectDocRef.collection('subjectQuestions').get();
-
-        if (snapshot.empty) {
-          questionsList.textContent = 'No questions found for ' + filterSubject + '.';
-          return;
-        }
-
-        snapshot.forEach(doc => {
-          const q = doc.data();
-          questionsHTML += renderQuestionItem(doc.id, filterSubject, q);
+      if (editDocId && editSubject) {
+        await db.collection('questions').doc(editSubject).collection('items').doc(editDocId).update({
+          subject: subj,
+          question: q,
+          options: opts,
+          correctAnswer: corr,
+          imageUrl: img || ''
         });
-
+        alert('Question updated successfully!');
       } else {
-        // Load all questions from all subjects
-        const subjectsSnapshot = await db.collection('questions').get();
-        if (subjectsSnapshot.empty) {
-          questionsList.textContent = 'No questions found.';
-          return;
-        }
-
-        for (const subjectDoc of subjectsSnapshot.docs) {
-          const subject = subjectDoc.id;
-          const subColSnap = await db.collection('questions').doc(subject).collection('subjectQuestions').get();
-
-          subColSnap.forEach(doc => {
-            const q = doc.data();
-            questionsHTML += renderQuestionItem(doc.id, subject, q);
-          });
-        }
+        await db.collection('questions').doc(subj).collection('items').add({
+          subject: subj,
+          question: q,
+          options: opts,
+          correctAnswer: corr,
+          imageUrl: img || ''
+        });
+        alert('Question added successfully!');
       }
+      resetFormBtn.click();
+      loadQuestions();
+    } catch (error) {
+      alert('Error saving question: ' + error.message);
+    }
+  });
 
-      questionsList.innerHTML = questionsHTML || 'No questions found.';
+  uploadJsonBtn.addEventListener('click', async () => {
+    const jsonStr = bulkUploadJson.value.trim();
+    if (!jsonStr) {
+      alert('Please paste JSON questions to upload.');
+      return;
+    }
+    let questionsArray;
+    try {
+      questionsArray = JSON.parse(jsonStr);
+      if (!Array.isArray(questionsArray)) {
+        alert('JSON must be an array of questions.');
+        return;
+      }
+    } catch {
+      alert('Invalid JSON format.');
+      return;
+    }
+
+    for (const q of questionsArray) {
+      if (!q.subject || !q.question || !q.options || !q.correctAnswer) {
+        alert('Each question must have subject, question, options, and correctAnswer fields.');
+        return;
+      }
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        alert('Each question must have exactly 4 options.');
+        return;
+      }
+      if (!q.options.includes(q.correctAnswer)) {
+        alert('Correct answer must exactly match one of the options.');
+        return;
+      }
+    }
+
+    try {
+      const batch = db.batch();
+      questionsArray.forEach(q => {
+        const docRef = db.collection('questions').doc(q.subject).collection('items').doc();
+        batch.set(docRef, q);
+      });
+      await batch.commit();
+      alert('Bulk upload successful!');
+      bulkUploadJson.value = '';
+      loadQuestions();
+    } catch (error) {
+      alert('Bulk upload failed: ' + error.message);
+    }
+  });
+
+  exportJsonBtn.addEventListener('click', async () => {
+    try {
+      const questions = [];
+      const subjectsSnapshot = await db.collection('questions').get();
+      for (const subjDoc of subjectsSnapshot.docs) {
+        const subj = subjDoc.id;
+        const itemsSnapshot = await db.collection('questions').doc(subj).collection('items').get();
+        itemsSnapshot.forEach(doc => {
+          questions.push(doc.data());
+        });
+      }
+      const jsonStr = JSON.stringify(questions, null, 2);
+
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'questions_export.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Export failed: ' + error.message);
+    }
+  });
+
+  async function loadQuestions() {
+    questionsList.textContent = 'Loading questions...';
+    try {
+      let html = '';
+      const subjectsSnapshot = await db.collection('questions').get();
+      if (subjectsSnapshot.empty) {
+        questionsList.textContent = 'No questions found.';
+        return;
+      }
+      for (const subjDoc of subjectsSnapshot.docs) {
+        const subj = subjDoc.id;
+        const itemsSnapshot = await db.collection('questions').doc(subj).collection('items').orderBy('question').get();
+        itemsSnapshot.forEach(doc => {
+          const data = doc.data();
+          html += `<div class="question-item" data-id="${doc.id}" data-subject="${subj}">
+            <strong>[${subj}]</strong> ${data.question}<br/>
+            Options: ${data.options ? data.options.join(', ') : ''}<br/>
+            Correct: ${data.correctAnswer}<br/>
+            ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
+            <br/>
+            <button onclick="editQuestion('${doc.id}', '${subj}')">Edit</button>
+            <button onclick="deleteQuestion('${doc.id}', '${subj}')">Delete</button>
+          </div>`;
+        });
+      }
+      questionsList.innerHTML = html;
     } catch (error) {
       questionsList.textContent = 'Error loading questions: ' + error.message;
     }
   }
 
-  function renderQuestionItem(id, subject, q) {
-    return `
-      <div class="question-item" data-id="${id}" data-subject="${subject}">
-        <strong>[${subject}]</strong> ${q.question}<br/>
-        Options: ${q.options ? q.options.join(', ') : ''}<br/>
-        Correct: ${q.correctAnswer}<br/>
-        ${q.imageUrl ? `<img src="${q.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
-        <br/>
-        <button onclick="editQuestion('${id}', '${subject}')">Edit</button>
-        <button onclick="deleteQuestion('${id}', '${subject}')">Delete</button>
-      </div>`;
-  }
-
-  // Edit question
-  window.editQuestion = async (docId, subject) => {
+  window.editQuestion = async function(docId, subject) {
     try {
-      const docRef = db.collection('questions').doc(subject).collection('subjectQuestions').doc(docId);
-      const doc = await docRef.get();
+      const doc = await db.collection('questions').doc(subject).collection('items').doc(docId).get();
       if (!doc.exists) {
         alert('Question not found!');
         return;
       }
       const data = doc.data();
-      subjectSelect.value = subject;
+      subjectSelect.value = data.subject || subject || '';
       questionInput.value = data.question || '';
       option1.value = data.options && data.options[0] || '';
       option2.value = data.options && data.options[1] || '';
@@ -457,115 +451,23 @@
       editDocId = docId;
       editSubject = subject;
       saveQuestionBtn.textContent = 'Update Question';
-      window.scrollTo({top: 0, behavior: 'smooth'});
+      window.scrollTo(0, 0);
     } catch (error) {
       alert('Error fetching question: ' + error.message);
     }
   };
 
-  // Delete question
-  window.deleteQuestion = async (docId, subject) => {
-  if (!confirm('Are you sure you want to delete this question?')) return;
+  window.deleteQuestion = async function(docId, subject) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
     try {
-      await db.collection('questions').doc(subject).collection('subjectQuestions').doc(docId).delete();
+      await db.collection('questions').doc(subject).collection('items').doc(docId).delete();
       alert('Question deleted successfully!');
-      loadQuestions(filterSubjectSelect.value);
+      loadQuestions();
     } catch (error) {
       alert('Error deleting question: ' + error.message);
     }
   };
-
-  // Filter questions on subject change
-  filterSubjectSelect.addEventListener('change', () => {
-    loadQuestions(filterSubjectSelect.value);
-  });
-
-  // Bulk upload JSON
-  uploadJsonBtn.addEventListener('click', async () => {
-    const jsonStr = bulkUploadJson.value.trim();
-    if (!jsonStr) {
-      alert('Please paste JSON to upload.');
-      return;
-    }
-
-    let questionsArray;
-    try {
-      questionsArray = JSON.parse(jsonStr);
-      if (!Array.isArray(questionsArray)) {
-        alert('JSON must be an array of question objects.');
-        return;
-      }
-    } catch (err) {
-      alert('Invalid JSON: ' + err.message);
-      return;
-    }
-
-    try {
-      let successCount = 0;
-      for (const q of questionsArray) {
-        // Validate question object shape
-        if (
-          !q.subject ||
-          !q.question ||
-          !Array.isArray(q.options) ||
-          q.options.length !== 4 ||
-          !q.correctAnswer ||
-          !q.options.includes(q.correctAnswer)
-        ) {
-          console.warn('Skipping invalid question:', q);
-          continue; // skip invalid
-        }
-        const subjectDocRef = db.collection('questions').doc(q.subject);
-        const questionsSubCol = subjectDocRef.collection('subjectQuestions');
-        await questionsSubCol.add({
-          question: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          imageUrl: q.imageUrl || ''
-        });
-        successCount++;
-      }
-      alert(`Uploaded ${successCount} valid questions successfully!`);
-      bulkUploadJson.value = '';
-      loadQuestions(filterSubjectSelect.value);
-    } catch (error) {
-      alert('Error uploading JSON: ' + error.message);
-    }
-  });
-
-  // Export all questions to JSON
-  exportJsonBtn.addEventListener('click', async () => {
-    try {
-      const allQuestions = [];
-      const subjectsSnapshot = await db.collection('questions').get();
-      for (const subjectDoc of subjectsSnapshot.docs) {
-        const subject = subjectDoc.id;
-        const subColSnap = await db.collection('questions').doc(subject).collection('subjectQuestions').get();
-        subColSnap.forEach(doc => {
-          const q = doc.data();
-          allQuestions.push({
-            subject: subject,
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            imageUrl: q.imageUrl || ''
-          });
-        });
-      }
-      const jsonStr = JSON.stringify(allQuestions, null, 2);
-      const blob = new Blob([jsonStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'neet_pg_questions_export.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      alert('Error exporting questions: ' + error.message);
-    }
-  });
 </script>
+
 </body>
-</html> 
+</html>
