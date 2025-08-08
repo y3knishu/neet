@@ -5,103 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NEET PG Quiz - Subjects</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f9f9f9;
-  }
-  h1 {
-    text-align: center;
-    color: #344ea3;
-  }
-  .year-group {
-    margin-bottom: 40px;
-  }
-  .year-title {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-    color: #222;
-    border-bottom: 2px solid #344ea3;
-    padding-bottom: 5px;
-  }
-  #subjectCardsContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+  h1 { text-align: center; color: #344ea3; }
+  .year-group { margin-bottom: 40px; }
+  .year-title { font-size: 1.5rem; margin-bottom: 15px; color: #222; border-bottom: 2px solid #344ea3; padding-bottom: 5px; }
+  #subjectCardsContainer { display: flex; flex-wrap: wrap; gap: 15px; }
   .subject-card {
-    flex: 1 1 180px;
-    max-width: 180px;
-    padding: 15px;
-    border-radius: 12px;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 3px 8px rgb(0 0 0 / 0.2);
-    user-select: none;
-    transition: transform 0.2s ease;
+    flex: 1 1 180px; max-width: 180px; padding: 15px; border-radius: 12px; color: white; cursor: pointer;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.2); user-select: none; transition: transform 0.2s ease;
     background: linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
   }
-  .subject-card.locked {
-    filter: grayscale(80%);
-    cursor: not-allowed;
-    opacity: 0.6;
+  .subject-card.locked { filter: grayscale(80%); cursor: not-allowed; opacity: 0.6; }
+  .subject-card:hover:not(.locked) { transform: scale(1.05); box-shadow: 0 6px 15px rgb(0 0 0 / 0.4); }
+  .subject-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; text-align: center; }
+  .label { padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
+  .label.free { background-color: #27ae60; }
+  .label.locked { background-color: #7f8c8d; }
+  #loginStatus { text-align: center; margin-bottom: 20px; }
+  #loginStatus button {
+    padding: 8px 15px; font-size: 1rem; border: none; border-radius: 6px;
+    cursor: pointer; margin-left: 10px; background: #344ea3; color: white;
   }
-  .subject-card:hover:not(.locked) {
-    transform: scale(1.05);
-    box-shadow: 0 6px 15px rgb(0 0 0 / 0.4);
-  }
-  .subject-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 6px;
-    text-align: center;
-  }
-  .subject-year {
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  .label {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-  }
-  .label.free {
-    background-color: #27ae60;
-  }
-  .label.locked {
-    background-color: #7f8c8d;
-  }
-  /* WhatsApp floating button */
   #whatsappHelp {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    background-color: #25d366;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    box-shadow: 0 4px 10px rgb(0 0 0 / 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    z-index: 999;
+    position: fixed; bottom: 25px; right: 25px; background-color: #25d366; width: 60px; height: 60px;
+    border-radius: 50%; box-shadow: 0 4px 10px rgb(0 0 0 / 0.3);
+    display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 999;
   }
-  #whatsappHelp img {
-    width: 35px;
-    height: 35px;
-  }
+  #whatsappHelp img { width: 35px; height: 35px; }
 </style>
 </head>
 <body>
 
 <h1>NEET PG Quiz Subjects</h1>
+
+<div id="loginStatus">
+  <span id="userEmail"></span>
+  <button id="btnLogin">Login</button>
+  <button id="btnLogout" style="display:none;">Logout</button>
+</div>
 
 <div id="yearGroupsContainer"></div>
 
@@ -110,8 +52,28 @@
   <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
 </a>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
 <script>
-  // Your subjects data grouped by year
+  // Firebase config - replace with your config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+    authDomain: "neet-88499.firebaseapp.com",
+    projectId: "neet-88499",
+    storageBucket: "neet-88499.firebasestorage.app",
+    messagingSenderId: "889163298965",
+    appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+    measurementId: "G-GEG090K2JQ"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
   const subjectsByYear = {
     "1st Year": [
       { name: "Anatomy", free: true },
@@ -143,17 +105,18 @@
   };
 
   const yearGroupsContainer = document.getElementById('yearGroupsContainer');
+  const userEmailSpan = document.getElementById('userEmail');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
 
-  // Simulate user login & payment info (replace with real Firebase auth and payment check later)
-  const userLoggedIn = false;  // Change to true to simulate logged in user
-  const userHasPaid = false;   // Change to true to simulate paid user
+  let currentUser = null;
+  let userHasPaid = false;
 
   function createSubjectCard(subject) {
     const card = document.createElement('div');
     card.classList.add('subject-card');
 
-    // Lock logic: Anatomy free for all, others locked if not paid or not logged in
-    const isLocked = !(subject.free || (userLoggedIn && userHasPaid));
+    const isLocked = !(subject.free || (currentUser && userHasPaid));
     if (isLocked) card.classList.add('locked');
 
     card.innerHTML = `
@@ -163,8 +126,9 @@
 
     if (!isLocked) {
       card.addEventListener('click', () => {
-        // Redirect to quiz page with subject parameter
-        window.location.href = `quiz.html?subject=${encodeURIComponent(subject.name.toLowerCase())}`;
+        // Redirect to quiz page with subject param (lowercase, no spaces)
+        const subjectParam = subject.name.toLowerCase().replace(/ & /g, '_').replace(/\s+/g, '_');
+        window.location.href = `quiz.html?subject=${encodeURIComponent(subjectParam)}`;
       });
     } else {
       card.title = 'Unlock by signing in and paying ₹99 (except Anatomy)';
@@ -193,10 +157,51 @@
     yearGroupsContainer.appendChild(groupDiv);
   }
 
-  // Render all years and subjects
-  for (const [year, subjects] of Object.entries(subjectsByYear)) {
-    renderYearGroup(year, subjects);
+  function renderAllSubjects() {
+    yearGroupsContainer.innerHTML = '';
+    for (const [year, subjects] of Object.entries(subjectsByYear)) {
+      renderYearGroup(year, subjects);
+    }
   }
+
+  // Auth state observer
+  auth.onAuthStateChanged(async (user) => {
+    currentUser = user;
+    if (user) {
+      userEmailSpan.textContent = `Logged in as: ${user.email}`;
+      btnLogin.style.display = 'none';
+      btnLogout.style.display = 'inline-block';
+
+      // Check if user has paid
+      try {
+        const docRef = db.collection('users').doc(user.uid);
+        const docSnap = await docRef.get();
+        userHasPaid = docSnap.exists && docSnap.data().isPaid === true;
+      } catch (error) {
+        console.error('Error fetching payment status:', error);
+        userHasPaid = false;
+      }
+    } else {
+      userEmailSpan.textContent = 'Not logged in';
+      btnLogin.style.display = 'inline-block';
+      btnLogout.style.display = 'none';
+      userHasPaid = false;
+    }
+
+    renderAllSubjects();
+  });
+
+  btnLogin.addEventListener('click', () => {
+    // Redirect to login page or open login popup
+    window.location.href = 'login.html';
+  });
+
+  btnLogout.addEventListener('click', () => {
+    auth.signOut();
+  });
+
+  // Initial render before auth state resolved
+  renderAllSubjects();
 </script>
 
 </body>
