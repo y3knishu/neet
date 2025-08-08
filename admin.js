@@ -16,7 +16,6 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const adminEmail = "y3knishu@gmail.com";
-const passwordAdmin = "xrnb21r72W@"; // For possible future password auth if you want
 
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
