@@ -1,9 +1,0 @@
-{
-  "anatomy": [
-    {"qno":1, "q":"The bone forming the forehead is:", "options":["Frontal","Parietal","Temporal","Occipital"], "answer":0, "imageUrl":""},
-    {"qno":2, "q":"Which nerve supplies muscles of mastication?", "options":["Facial","Trigeminal","Glossopharyngeal","Accessory"], "answer":1, "imageUrl":""}
-  ],
-  "physiology": [
-    {"qno":1, "q":"Normal resting heart rate (approx):", "options":["30-40 bpm","50-60 bpm","60-100 bpm","110-120 bpm"], "answer":2, "imageUrl":""}
-  ]
-}
