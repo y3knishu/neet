@@ -1,232 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NEET PG Quiz - Quiz</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0; padding: 0;
-    display: flex; height: 100vh; overflow: hidden;
-    background: #f5f5f7;
-  }
-  #palette {
-    width: 180px;
-    background: #1e2a78;
-    color: white;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 10px;
-    overflow-y: auto;
-  }
-  #palette button {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    background: #344ea3;
-    color: white;
-  }
-  #palette button.attempted {
-    background: #f39c12; /* orange */
-  }
-  #palette button.correct {
-    background: #27ae60; /* green */
-  }
-  #palette button.wrong {
-    background: #e74c3c; /* red */
-  }
-  #quizContainer {
-    flex: 1;
-    padding: 20px 30px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-  #questionNumber {
-    font-weight: bold;
-    font-size: 1.2rem;
-    margin-bottom: 8px;
-  }
-  #questionText {
-    font-size: 1.1rem;
-    margin-bottom: 12px;
-  }
-  #questionImage {
-    max-width: 100%;
-    max-height: 220px;
-    object-fit: contain;
-    margin-bottom: 12px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-  }
-  #options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .option-btn {
-    padding: 10px 15px;
-    border: 2px solid #344ea3;
-    border-radius: 8px;
-    font-size: 1rem;
-    cursor: pointer;
-    background: white;
-    text-align: left;
-    user-select: none;
-    transition: background-color 0.3s, border-color 0.3s;
-  }
-  .option-btn.correct {
-    background-color: #27ae60;
-    border-color: #27ae60;
-    color: white;
-  }
-  .option-btn.wrong {
-    background-color: #e74c3c;
-    border-color: #e74c3c;
-    color: white;
-  }
-  .option-btn.disabled {
-    cursor: default;
-    opacity: 0.8;
-  }
-  #navigationButtons {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  button.nav-btn {
-    padding: 12px 18px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 6px;
-    border: none;
-    background: #344ea3;
-    color: white;
-    user-select: none;
-    transition: background-color 0.3s;
-  }
-  button.nav-btn:hover:not(:disabled) {
-    background: #1e2a78;
-  }
-  button.nav-btn:disabled {
-    background: #888;
-    cursor: not-allowed;
-  }
-  #submitSection {
-    margin-top: 20px;
-    text-align: center;
-  }
-  #scoreSummary {
-    margin-top: 20px;
-    font-size: 1.1rem;
-  }
-  #pieChartContainer {
-    margin-top: 12px;
-    max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  #logoutBtn {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    background: #c0392b;
-    color: white;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    user-select: none;
-  }
-  #logoutBtn:hover {
-    background: #e74c3c;
-  }
-
-  /* Responsive */
-  @media (max-width: 700px) {
-    body {
-      flex-direction: column;
-    }
-    #palette {
-      width: 100%;
-      height: 70px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      white-space: nowrap;
-      flex-wrap: nowrap;
-    }
-    #palette button {
-      display: inline-block;
-      width: 40px;
-      height: 40px;
-      margin-right: 6px;
-    }
-    #quizContainer {
-      padding: 15px 20px;
-      height: calc(100vh - 70px);
-      overflow-y: auto;
-    }
-    #navigationButtons {
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minimal Quiz Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #question { font-weight: bold; margin-bottom: 10px; }
+    .option-btn { display: block; margin: 6px 0; padding: 8px 12px; cursor: pointer; border: 1px solid #333; border-radius: 4px; }
+    .correct { background-color: #27ae60; color: white; }
+    .wrong { background-color: #e74c3c; color: white; }
+  </style>
 </head>
 <body>
 
-<button id="logoutBtn">Logout</button>
+<h2>Minimal Quiz Test</h2>
+<div id="loading">Loading questions...</div>
 
-<div id="palette"></div>
-
-<div id="quizContainer">
-  <div id="questionNumber"></div>
-  <div id="questionText"></div>
-  <img id="questionImage" src="" alt="" style="display:none;" />
+<div id="quiz" style="display:none;">
+  <div id="question"></div>
   <div id="options"></div>
-
-  <div id="navigationButtons">
-    <button id="prevBtn" class="nav-btn">Previous</button>
-    <button id="nextBtn" class="nav-btn">Next</button>
-  </div>
-
-  <div id="submitSection" style="display:none;">
-    <button id="submitBtn" class="nav-btn" style="background:#27ae60;">Submit</button>
-    <button id="retryBtn" class="nav-btn" style="background:#e67e22;">Retry</button>
-  </div>
-
-  <div id="scoreSummary" style="display:none;">
-    <div>Total Questions: <span id="totalQ"></span></div>
-    <div>Attempted: <span id="attemptedQ"></span></div>
-    <div>Correct: <span id="correctQ"></span></div>
-    <div>Wrong: <span id="wrongQ"></span></div>
-    <div>Score: <span id="score"></span></div>
-    <div id="pieChartContainer">
-      <canvas id="pieChart"></canvas>
-    </div>
-  </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import {
-    getFirestore, collection, query, where, getDocs, doc,
-    setDoc, getDoc
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-  import {
-    getAuth, onAuthStateChanged, signOut
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
+  // Your Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -237,306 +37,73 @@
     measurementId: "G-GEG090K2JQ"
   };
 
-  // Initialize
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app);
 
-  // Get subject from URL param ?subject=Anatomy etc (case sensitive)
-  const urlParams = new URLSearchParams(window.location.search);
-  const subject = urlParams.get('subject') || '';
+  // Change this subject exactly as stored in Firestore (case sensitive)
+  const subject = "Anatomy";
 
-  if (!subject) {
-    alert('No subject selected. Redirecting to homepage.');
-    window.location.href = 'index.html';
-  }
-
-  // UI Elements
-  const palette = document.getElementById('palette');
-  const questionNumberElem = document.getElementById('questionNumber');
-  const questionTextElem = document.getElementById('questionText');
-  const questionImageElem = document.getElementById('questionImage');
-  const optionsContainer = document.getElementById('options');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const submitSection = document.getElementById('submitSection');
-  const submitBtn = document.getElementById('submitBtn');
-  const retryBtn = document.getElementById('retryBtn');
-  const scoreSummary = document.getElementById('scoreSummary');
-  const totalQElem = document.getElementById('totalQ');
-  const attemptedQElem = document.getElementById('attemptedQ');
-  const correctQElem = document.getElementById('correctQ');
-  const wrongQElem = document.getElementById('wrongQ');
-  const scoreElem = document.getElementById('score');
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  let questions = [];
-  let currentIndex = 0;
-  let userAnswers = {}; // questionIndex -> chosenOptionIndex
-  let answerResults = {}; // questionIndex -> 'correct'|'wrong'|'unattempted'
-
-  // Scores
-  let totalQuestions = 0;
-  let correctCount = 0;
-  let wrongCount = 0;
-  let attemptedCount = 0;
-
-  // Pie chart
-  let pieChart = null;
-
-  // User uid for Firestore save/load
-  let uid = null;
-
-  // Wait for auth state
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      alert('Please login to access quiz.');
-      window.location.href = 'login.html';
-      return;
-    }
-    uid = user.uid;
-
-    // Load questions for subject
-    await loadQuestions();
-
-    // Load saved progress for this subject & user
-    await loadProgress();
-
-    // Render UI initial question & palette
-    renderQuestion();
-    renderPalette();
-
-    updateNavButtons();
-  });
-
-  // Load questions from Firestore
   async function loadQuestions() {
     const q = query(collection(db, 'questions'), where('subject', '==', subject));
     const querySnapshot = await getDocs(q);
-    questions = [];
+
+    console.log(`Questions for subject "${subject}":`, querySnapshot.size);
+    if (querySnapshot.size === 0) {
+      alert(`No questions found for subject "${subject}"`);
+      document.getElementById('loading').textContent = 'No questions found.';
+      return;
+    }
+
+    const questions = [];
     querySnapshot.forEach(docSnap => {
       const data = docSnap.data();
-      questions.push({
-        id: docSnap.id,
-        question: data.question,
-        image: data.imageUrl || null,
-        options: data.options,
-        correctOption: parseInt(data.correctAnswer, 10)
-      });
-    });
-    questions.sort(() => Math.random() - 0.5); // shuffle for variety
-    totalQuestions = questions.length;
-    if (totalQuestions === 0) {
-      alert('No questions found for subject ' + subject);
-      window.location.href = 'index.html';
-    }
-  }
-
-  // Load saved progress from Firestore
-  async function loadProgress() {
-    try {
-      const progressDoc = await getDoc(doc(db, 'users', uid, 'progress', subject));
-      if (progressDoc.exists()) {
-        const data = progressDoc.data();
-        userAnswers = data.userAnswers || {};
-        answerResults = data.answerResults || {};
-      }
-    } catch (e) {
-      console.warn('Error loading progress:', e.message);
-    }
-    calculateScores();
-  }
-
-  // Save progress to Firestore
-  async function saveProgress() {
-    try {
-      await setDoc(doc(db, 'users', uid, 'progress', subject), {
-        userAnswers,
-        answerResults,
-        lastUpdated: new Date().toISOString()
-      });
-    } catch (e) {
-      console.warn('Error saving progress:', e.message);
-    }
-  }
-
-  // Calculate scores from answerResults
-  function calculateScores() {
-    correctCount = 0; wrongCount = 0; attemptedCount = 0;
-    for (const key in answerResults) {
-      const val = answerResults[key];
-      if (val === 'correct') correctCount++;
-      if (val === 'wrong') wrongCount++;
-      if (val === 'correct' || val === 'wrong') attemptedCount++;
-    }
-  }
-
-  // Render question palette
-  function renderPalette() {
-    palette.innerHTML = '';
-    for (let i = 0; i < totalQuestions; i++) {
-      const btn = document.createElement('button');
-      btn.textContent = i + 1;
-      btn.classList.add('palette-btn');
-      if (answerResults[i] === 'correct') btn.classList.add('correct');
-      else if (answerResults[i] === 'wrong') btn.classList.add('wrong');
-      else if (answerResults[i] === 'unattempted' || !(i in answerResults)) btn.classList.remove('correct','wrong','attempted');
-      else btn.classList.add('attempted');
-
-      btn.addEventListener('click', () => {
-        currentIndex = i;
-        renderQuestion();
-        updateNavButtons();
-      });
-      palette.appendChild(btn);
-    }
-  }
-
-  // Render current question & options
-  function renderQuestion() {
-    const q = questions[currentIndex];
-    questionNumberElem.textContent = `Question ${currentIndex + 1} of ${totalQuestions}`;
-    questionTextElem.textContent = q.question;
-
-    if (q.image) {
-      questionImageElem.src = q.image;
-      questionImageElem.style.display = 'block';
-    } else {
-      questionImageElem.style.display = 'none';
-      questionImageElem.src = '';
-    }
-
-    optionsContainer.innerHTML = '';
-    q.options.forEach((opt, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.textContent = opt;
-
-      // Disable if already answered this question
-      if (answerResults[currentIndex] === 'correct' || answerResults[currentIndex] === 'wrong') {
-        btn.classList.add('disabled');
-        if (idx === q.correctOption) btn.classList.add('correct');
-        if (idx === userAnswers[currentIndex] && answerResults[currentIndex] === 'wrong') btn.classList.add('wrong');
-      } else {
-        btn.addEventListener('click', () => selectAnswer(idx));
-      }
-      optionsContainer.appendChild(btn);
+      questions.push(data);
+      console.log('Question data:', data);
     });
 
-    // Show submit section only on last question
-    if (currentIndex === totalQuestions - 1) {
-      submitSection.style.display = 'flex';
-    } else {
-      submitSection.style.display = 'none';
-    }
-
-    // Hide score summary until submitted
-    scoreSummary.style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    startQuiz(questions);
   }
 
-  // Handle option selection
-  function selectAnswer(selectedIdx) {
-    const q = questions[currentIndex];
-    userAnswers[currentIndex] = selectedIdx;
-    if (selectedIdx === q.correctOption) {
-      answerResults[currentIndex] = 'correct';
-    } else {
-      answerResults[currentIndex] = 'wrong';
+  function startQuiz(questions) {
+    const quizDiv = document.getElementById('quiz');
+    const questionDiv = document.getElementById('question');
+    const optionsDiv = document.getElementById('options');
+
+    let currentQuestionIndex = 0;
+
+    function showQuestion(index) {
+      const q = questions[index];
+      questionDiv.textContent = q.question;
+
+      optionsDiv.innerHTML = '';
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.className = 'option-btn';
+
+        btn.onclick = () => {
+          // Disable all buttons after click
+          Array.from(optionsDiv.children).forEach(b => b.disabled = true);
+
+          if (idx === Number(q.correctAnswer)) {
+            btn.classList.add('correct');
+            alert('Correct!');
+          } else {
+            btn.classList.add('wrong');
+            alert(`Wrong! Correct answer is option ${q.correctAnswer}`);
+          }
+        };
+
+        optionsDiv.appendChild(btn);
+      });
     }
-    calculateScores();
-    renderPalette();
-    renderQuestion();
-    saveProgress();
+
+    quizDiv.style.display = 'block';
+    showQuestion(currentQuestionIndex);
   }
 
-  // Navigation buttons
-  prevBtn.addEventListener('click', () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      renderQuestion();
-      updateNavButtons();
-    }
-  });
-  nextBtn.addEventListener('click', () => {
-    if (currentIndex < totalQuestions - 1) {
-      currentIndex++;
-      renderQuestion();
-      updateNavButtons();
-    }
-  });
-
-  // Update nav button states
-  function updateNavButtons() {
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === totalQuestions - 1;
-  }
-
-  // Submit quiz
-  submitBtn.addEventListener('click', () => {
-    // Show final score summary
-    totalQElem.textContent = totalQuestions;
-    attemptedQElem.textContent = attemptedCount;
-    correctQElem.textContent = correctCount;
-    wrongQElem.textContent = wrongCount;
-
-    // Calculate total score: +4 for correct, -1 for wrong
-    const totalScore = correctCount * 4 - wrongCount;
-    scoreElem.textContent = totalScore;
-
-    scoreSummary.style.display = 'block';
-    submitSection.style.display = 'none';
-
-    // Disable all option buttons after submission
-    document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
-
-    renderPalette();
-    renderChart(correctCount, wrongCount, totalQuestions - attemptedCount);
-  });
-
-  // Retry quiz
-  retryBtn.addEventListener('click', () => {
-    if (!confirm('Are you sure you want to reset this test? All your answers will be lost.')) return;
-    userAnswers = {};
-    answerResults = {};
-    correctCount = 0;
-    wrongCount = 0;
-    attemptedCount = 0;
-    currentIndex = 0;
-    saveProgress();
-    renderQuestion();
-    renderPalette();
-    updateNavButtons();
-    scoreSummary.style.display = 'none';
-    submitSection.style.display = 'none';
-  });
-
-  // Logout
-  logoutBtn.addEventListener('click', () => {
-    signOut(auth);
-  });
-
-  // Render Pie Chart
-  function renderChart(correct, wrong, unattempted) {
-    const ctx = document.getElementById('pieChart').getContext('2d');
-    if (pieChart) pieChart.destroy();
-
-    pieChart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['Correct', 'Wrong', 'Unattempted'],
-        datasets: [{
-          data: [correct, wrong, unattempted],
-          backgroundColor: ['#27ae60', '#e74c3c', '#bdc3c7']
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom' }
-        }
-      }
-    });
-  }
+  loadQuestions();
 </script>
 
 </body>
