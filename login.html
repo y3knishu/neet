@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NEET PG Quiz - Login</title>
+<title>NEET PG Quiz - Login & Signup</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
     align-items: center;
     height: 100vh;
   }
-  .login-container {
+  .container {
     background: white;
     padding: 30px 40px;
     border-radius: 12px;
@@ -42,14 +42,19 @@
     border-radius: 8px;
     font-size: 1.1rem;
     cursor: pointer;
+    margin-bottom: 10px;
   }
   button:hover {
     background-color: #2a3a81;
   }
-  .separator {
-    margin: 20px 0;
-    font-weight: bold;
-    color: #555;
+  .toggle-btn {
+    background-color: transparent;
+    color: #344ea3;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.9rem;
+    margin-top: 10px;
   }
   #errorMsg {
     color: red;
@@ -58,24 +63,30 @@
   }
   #googleSignInBtn {
     background-color: #db4437;
-    margin-top: 10px;
   }
 </style>
 </head>
 <body>
 
-<div class="login-container">
-  <h2>NEET PG Quiz Login</h2>
+<div class="container">
+  <h2 id="formTitle">Login to NEET PG Quiz</h2>
   <div id="errorMsg"></div>
   
-  <input type="email" id="emailInput" placeholder="Email" required />
-  <input type="password" id="passwordInput" placeholder="Password" required />
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" required />
+    <input type="password" id="loginPassword" placeholder="Password" required />
+    <button type="submit">Login</button>
+  </form>
   
-  <button id="loginBtn">Login / Sign Up</button>
-  
-  <div class="separator">OR</div>
+  <form id="signupForm" style="display:none;">
+    <input type="email" id="signupEmail" placeholder="Email" required />
+    <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required />
+    <button type="submit">Sign Up</button>
+  </form>
   
   <button id="googleSignInBtn">Sign in with Google</button>
+  
+  <button class="toggle-btn" id="toggleFormBtn">Don't have an account? Sign Up</button>
 </div>
 
 <!-- Firebase SDK -->
@@ -96,16 +107,58 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
-  const emailInput = document.getElementById('emailInput');
-  const passwordInput = document.getElementById('passwordInput');
-  const loginBtn = document.getElementById('loginBtn');
-  const googleSignInBtn = document.getElementById('googleSignInBtn');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const toggleFormBtn = document.getElementById('toggleFormBtn');
+  const formTitle = document.getElementById('formTitle');
   const errorMsg = document.getElementById('errorMsg');
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
 
-  loginBtn.addEventListener('click', async () => {
+  // Toggle between login and signup forms
+  toggleFormBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    if (loginForm.style.display === 'none') {
+      loginForm.style.display = 'block';
+      signupForm.style.display = 'none';
+      formTitle.textContent = 'Login to NEET PG Quiz';
+      toggleFormBtn.textContent = "Don't have an account? Sign Up";
+    } else {
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'block';
+      formTitle.textContent = 'Sign Up for NEET PG Quiz';
+      toggleFormBtn.textContent = "Already have an account? Login";
+    }
+  });
+
+  // Login form submit handler
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+      errorMsg.textContent = 'Please enter email and password.';
+      return;
+    }
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => {
+        window.location.href = 'index.html';
+      })
+      .catch(error => {
+        errorMsg.textContent = error.message;
+      });
+  });
+
+  // Signup form submit handler
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
 
     if (!email || !password) {
       errorMsg.textContent = 'Please enter email and password.';
@@ -117,37 +170,28 @@
       return;
     }
 
-    try {
-      console.log("Trying to sign in with:", email);
-      await auth.signInWithEmailAndPassword(email, password);
-      window.location.href = 'index.html';
-    } catch (signInError) {
-      if (signInError.code === 'auth/user-not-found') {
-        try {
-          console.log("User not found, trying to sign up:", email);
-          await auth.createUserWithEmailAndPassword(email, password);
-          window.location.href = 'index.html';
-        } catch (signUpError) {
-          console.error("Signup error:", signUpError.code, signUpError.message);
-          errorMsg.textContent = signUpError.message;
-        }
-      } else {
-        errorMsg.textContent = signInError.message;
-      }
-    }
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(() => {
+        window.location.href = 'index.html';
+      })
+      .catch(error => {
+        errorMsg.textContent = error.message;
+      });
   });
 
+  // Google sign in handler
   googleSignInBtn.addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider)
       .then(() => {
         window.location.href = 'index.html';
       })
-      .catch((error) => {
+      .catch(error => {
         errorMsg.textContent = error.message;
       });
   });
 
+  // Redirect if already logged in
   auth.onAuthStateChanged(user => {
     if (user) {
       window.location.href = 'index.html';
