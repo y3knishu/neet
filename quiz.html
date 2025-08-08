@@ -242,9 +242,9 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // Get subject from URL param ?subject=anatomy etc
+  // Get subject from URL param ?subject=Anatomy etc (case sensitive)
   const urlParams = new URLSearchParams(window.location.search);
-  const subject = (urlParams.get('subject') || '').toLowerCase();
+  const subject = urlParams.get('subject') || '';
 
   if (!subject) {
     alert('No subject selected. Redirecting to homepage.');
@@ -319,9 +319,9 @@
       questions.push({
         id: docSnap.id,
         question: data.question,
-        image: data.image || null,
+        image: data.imageUrl || null,
         options: data.options,
-        correctOption: data.correctOption
+        correctOption: parseInt(data.correctAnswer, 10)
       });
     });
     questions.sort(() => Math.random() - 0.5); // shuffle for variety
@@ -537,7 +537,6 @@
       }
     });
   }
-
 </script>
 
 </body>
