@@ -1,4 +1,3 @@
-// Your Firebase config (exact)
 const firebaseConfig = {
   apiKey: "AIzaSyDohygxGWFCQ-Kn2yROr_cviSUcD0drt0M",
   authDomain: "nishant-website.firebaseapp.com",
@@ -16,12 +15,10 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Auto-detect Firebase Functions URL for Razorpay
 const FUNCTIONS_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
   ? `http://127.0.0.1:5001/${firebaseConfig.projectId}/us-central1/api`
   : `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net/api`;
 
-// Subject list
 const subjects = [
   { name: "Anatomy", free: true },
   { name: "Physiology", free: false },
@@ -47,14 +44,13 @@ const subjects = [
 let currentUser = null;
 let isPaidUser = false;
 
-// Render subjects on homepage
 function renderSubjects() {
   const container = document.getElementById("subjectsContainer");
   container.innerHTML = "";
   subjects.forEach(sub => {
     const card = document.createElement("div");
     card.className = "subject-card";
-    // random pastel gradient background for rainbow effect
+
     const hue1 = Math.floor(Math.random() * 360);
     const hue2 = (hue1 + 30) % 360;
     card.style.background = `linear-gradient(135deg, hsl(${hue1}, 70%, 80%), hsl(${hue2}, 70%, 75%))`;
@@ -71,7 +67,9 @@ function renderSubjects() {
       card.onclick = () => window.location.href = `quiz.html?subject=${encodeURIComponent(sub.name)}`;
     } else {
       card.classList.add("locked");
-      card.onclick = () => startPayment();
+      card.onclick = () => {
+        alert("Please login and pay ₹99 to unlock all subjects except Anatomy.");
+      };
     }
 
     container.appendChild(card);
@@ -80,7 +78,6 @@ function renderSubjects() {
   });
 }
 
-// Load progress from Firestore for a subject and user
 function loadProgress(uid, subject) {
   db.collection("users").doc(uid).collection("progress").doc(subject)
     .get()
@@ -90,7 +87,7 @@ function loadProgress(uid, subject) {
         const attempted = data.attempted || 0;
         const correct = data.correct || 0;
         const wrong = data.wrong || 0;
-        const totalQuestions = data.totalQuestions || 20; // default total
+        const totalQuestions = data.totalQuestions || 20;
 
         document.getElementById(`stats-${subject.replace(/\s+/g,'-')}`).innerText =
           `Attempted: ${attempted} | Correct: ${correct} | Wrong: ${wrong}`;
@@ -100,7 +97,6 @@ function loadProgress(uid, subject) {
     });
 }
 
-// Login with Google
 async function loginWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
@@ -110,12 +106,10 @@ async function loginWithGoogle() {
   }
 }
 
-// Logout user
 async function logoutUser() {
   await auth.signOut();
 }
 
-// Auth state listener
 auth.onAuthStateChanged(async user => {
   currentUser = user;
   if (user) {
@@ -133,7 +127,6 @@ auth.onAuthStateChanged(async user => {
   renderSubjects();
 });
 
-// Razorpay payment start
 function startPayment() {
   if (!currentUser) {
     alert("Please login to unlock all subjects.");
@@ -168,6 +161,6 @@ function startPayment() {
     });
 }
 
-// Attach login/logout buttons (make sure these exist in your HTML)
+// Attach event listeners
 document.getElementById("loginBtn").onclick = loginWithGoogle;
 document.getElementById("logoutBtn").onclick = logoutUser;
