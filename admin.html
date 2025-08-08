@@ -1,447 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Panel - NEET PG MCQs</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f9f9f9;
-    }
-    h1 {
-      text-align: center;
-      color: #0077cc;
-    }
-    #subjectSelect {
-      margin-bottom: 15px;
-      font-size: 16px;
-      padding: 6px;
-    }
-    #questionList div {
-      padding: 8px;
-      background: white;
-      border: 1px solid #ddd;
-      margin-bottom: 6px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-    }
-    #questionList div:hover {
-      background-color: #e0f0ff;
-    }
-    form {
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      box-shadow: 0 0 8px #ccc;
-      margin-top: 20px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input[type=text], textarea, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      box-sizing: border-box;
-      border-radius: 4px;
-      border: 1px solid #aaa;
-      font-size: 14px;
-    }
-    textarea {
-      resize: vertical;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      background-color: #0077cc;
-      color: white;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    #message {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    #logoutBtn {
-      float: right;
-      background-color: #cc3300;
-      margin-bottom: 20px;
-    }
-    #bulkUploadSection {
-      margin-top: 30px;
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      box-shadow: 0 0 8px #ccc;
-    }
-    #exportBtn {
-      background-color: #28a745;
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NEET PG Admin Panel</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+  h1 { color: #344ea3; }
+  label { display: block; margin-top: 10px; font-weight: bold; }
+  input[type=text], select, textarea {
+    width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #344ea3;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 15px;
+    background-color: #344ea3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  button:hover {
+    background-color: #2a3a81;
+  }
+  textarea {
+    resize: vertical;
+    height: 80px;
+  }
+  #questionsList {
+    margin-top: 30px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  .question-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+  }
+  .question-item:last-child {
+    border-bottom: none;
+  }
+  .question-item button {
+    margin-left: 10px;
+    padding: 5px 8px;
+    font-size: 0.9rem;
+  }
+</style>
 </head>
 <body>
-  <h1>NEET PG MCQ Admin Panel</h1>
-  <button id="logoutBtn">Logout</button>
 
+<h1>NEET PG Admin Panel</h1>
+
+<!-- Question Form -->
+<form id="questionForm">
   <label for="subjectSelect">Select Subject:</label>
-  <select id="subjectSelect">
-    <option value="">-- Choose Subject --</option>
-    <option value="Anatomy">Anatomy</option>
-    <option value="Physiology">Physiology</option>
-    <option value="Biochemistry">Biochemistry</option>
-    <option value="Pathology">Pathology</option>
-    <option value="Pharmacology">Pharmacology</option>
-    <option value="Microbiology">Microbiology</option>
-    <option value="Forensic Medicine">Forensic Medicine</option>
-    <option value="Community Medicine">Community Medicine</option>
-    <option value="ENT">ENT</option>
-    <option value="Ophthalmology">Ophthalmology</option>
-    <option value="General Medicine">General Medicine</option>
-    <option value="General Surgery">General Surgery</option>
-    <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
-    <option value="Pediatrics">Pediatrics</option>
-    <option value="Orthopaedics">Orthopaedics</option>
-    <option value="Dermatology">Dermatology</option>
-    <option value="Psychiatry">Psychiatry</option>
-    <option value="Respiratory Medicine">Respiratory Medicine</option>
-    <option value="Anesthesiology">Anesthesiology</option>
+  <select id="subjectSelect" required>
+    <optgroup label="1st Year">
+      <option value="Anatomy">Anatomy</option>
+      <option value="Physiology">Physiology</option>
+      <option value="Biochemistry">Biochemistry</option>
+    </optgroup>
+    <optgroup label="2nd Year">
+      <option value="Pathology">Pathology</option>
+      <option value="Pharmacology">Pharmacology</option>
+      <option value="Microbiology">Microbiology</option>
+      <option value="Forensic Medicine">Forensic Medicine</option>
+    </optgroup>
+    <optgroup label="3rd Year">
+      <option value="Community Medicine">Community Medicine</option>
+      <option value="ENT">ENT</option>
+      <option value="Ophthalmology">Ophthalmology</option>
+    </optgroup>
+    <optgroup label="Final Year">
+      <option value="General Medicine">General Medicine</option>
+      <option value="General Surgery">General Surgery</option>
+      <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
+      <option value="Pediatrics">Pediatrics</option>
+      <option value="Orthopaedics">Orthopaedics</option>
+      <option value="Dermatology">Dermatology</option>
+      <option value="Psychiatry">Psychiatry</option>
+      <option value="Respiratory Medicine">Respiratory Medicine</option>
+      <option value="Anesthesiology">Anesthesiology</option>
+    </optgroup>
   </select>
 
-  <div id="questionList">Select a subject to load questions.</div>
+  <label for="questionInput">Question:</label>
+  <textarea id="questionInput" required></textarea>
 
-  <form id="questionForm">
-    <h2 id="formTitle">Add New Question</h2>
+  <label for="option1">Option 1:</label>
+  <input type="text" id="option1" required />
 
-    <label>Question Text:</label>
-    <textarea id="questionText" rows="3" required></textarea>
+  <label for="option2">Option 2:</label>
+  <input type="text" id="option2" required />
 
-    <label>Image URL (optional):</label>
-    <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" />
+  <label for="option3">Option 3:</label>
+  <input type="text" id="option3" required />
 
-    <label>Option A:</label>
-    <input type="text" id="optionA" required />
+  <label for="option4">Option 4:</label>
+  <input type="text" id="option4" required />
 
-    <label>Option B:</label>
-    <input type="text" id="optionB" required />
+  <label for="correctAnswer">Correct Answer (must exactly match one option):</label>
+  <input type="text" id="correctAnswer" required />
 
-    <label>Option C:</label>
-    <input type="text" id="optionC" required />
+  <label for="imageUrl">Image URL (optional):</label>
+  <input type="text" id="imageUrl" placeholder="https://example.com/image.png" />
 
-    <label>Option D:</label>
-    <input type="text" id="optionD" required />
+  <button type="submit" id="saveQuestionBtn">Add Question</button>
+  <button type="button" id="resetFormBtn">Reset Form</button>
+</form>
 
-    <label>Correct Option:</label>
-    <select id="correctOption" required>
-      <option value="">-- Select Correct Option --</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-      <option value="C">C</option>
-      <option value="D">D</option>
-    </select>
+<!-- Bulk JSON Upload -->
+<h2>Bulk Upload Questions (JSON)</h2>
+<textarea id="bulkUploadJson" placeholder='Paste JSON array of questions here...' style="width:100%; height:150px;"></textarea>
+<br />
+<button id="uploadJsonBtn">Upload JSON</button>
+<button id="exportJsonBtn">Export All Questions to JSON</button>
 
-    <button type="submit" id="saveBtn">Save Question</button>
-    <button type="button" id="resetBtn">Reset Form</button>
-    <div id="message"></div>
-  </form>
+<!-- Questions List -->
+<h2>Existing Questions</h2>
+<div id="questionsList">Loading questions...</div>
 
-  <div id="bulkUploadSection">
-    <h2>Bulk Upload Questions (JSON)</h2>
-    <input type="file" id="jsonFileInput" accept=".json" />
-    <button id="uploadJsonBtn">Upload JSON</button>
-    <button id="exportBtn">Export Questions as JSON</button>
-    <div id="bulkMessage"></div>
-  </div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+    authDomain: "neet-88499.firebaseapp.com",
+    projectId: "neet-88499",
+    storageBucket: "neet-88499.firebasestorage.app",
+    messagingSenderId: "889163298965",
+    appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+    measurementId: "G-GEG090K2JQ"
+  };
 
-  <script>
-    // Your Firebase config here
-    const firebaseConfig = {
-      apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
-      authDomain: "neet-88499.firebaseapp.com",
-      projectId: "neet-88499",
-      storageBucket: "neet-88499.firebasestorage.app",
-      messagingSenderId: "889163298965",
-      appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
-      measurementId: "G-GEG090K2JQ"
-    };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  // Admin email and password
+  const adminEmail = 'y3knishu@gmail.com';
+  const adminPassword = 'xrnb21r72W@';
 
-    const adminEmail = "y3knishu@gmail.com";
+  // DOM Elements
+  const questionForm = document.getElementById('questionForm');
+  const subjectSelect = document.getElementById('subjectSelect');
+  const questionInput = document.getElementById('questionInput');
+  const option1 = document.getElementById('option1');
+  const option2 = document.getElementById('option2');
+  const option3 = document.getElementById('option3');
+  const option4 = document.getElementById('option4');
+  const correctAnswer = document.getElementById('correctAnswer');
+  const imageUrl = document.getElementById('imageUrl');
+  const saveQuestionBtn = document.getElementById('saveQuestionBtn');
+  const resetFormBtn = document.getElementById('resetFormBtn');
+  const bulkUploadJson = document.getElementById('bulkUploadJson');
+  const uploadJsonBtn = document.getElementById('uploadJsonBtn');
+  const exportJsonBtn = document.getElementById('exportJsonBtn');
+  const questionsList = document.getElementById('questionsList');
 
-    const subjectSelect = document.getElementById("subjectSelect");
-    const questionList = document.getElementById("questionList");
-    const questionForm = document.getElementById("questionForm");
-    const message = document.getElementById("message");
-    const bulkMessage = document.getElementById("bulkMessage");
+  // State for editing
+  let editDocId = null;
 
-    const questionText = document.getElementById("questionText");
-    const imageUrl = document.getElementById("imageUrl");
-    const optionA = document.getElementById("optionA");
-    const optionB = document.getElementById("optionB");
-    const optionC = document.getElementById("optionC");
-    const optionD = document.getElementById("optionD");
-    const correctOption = document.getElementById("correctOption");
-    const formTitle = document.getElementById("formTitle");
-    const saveBtn = document.getElementById("saveBtn");
-    const resetBtn = document.getElementById("resetBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+  // Admin login prompt on page load
+  async function adminLogin() {
+    try {
+      await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+      console.log('Admin logged in');
+      loadQuestions();
+    } catch (error) {
+      alert('Admin login failed: ' + error.message);
+      window.location.href = 'login.html'; // redirect to login if fail
+    }
+  }
 
-    let editingQuestionId = null;
+  adminLogin();
 
-    // Check auth state and restrict access
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        alert("Please login as admin to access this page.");
-        window.location.href = "login.html"; // Change to your login page
+  // Load all questions from Firestore
+  async function loadQuestions() {
+    questionsList.innerHTML = 'Loading questions...';
+    try {
+      const snapshot = await db.collection('questions').orderBy('subject').orderBy('question').get();
+      if (snapshot.empty) {
+        questionsList.innerHTML = 'No questions found.';
         return;
       }
-      if (user.email !== adminEmail) {
-        alert("Access denied. Admin only.");
-        auth.signOut();
-        window.location.href = "login.html";
-        return;
-      }
-      // Admin logged in - load questions if subject selected
-      if(subjectSelect.value) {
-        loadQuestionsForSubject(subjectSelect.value);
+
+      let html = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        html += `<div class="question-item" data-id="${doc.id}">
+          <strong>[${data.subject}]</strong> ${data.question}<br/>
+          Options: ${data.options ? data.options.join(', ') : ''}<br/>
+          Correct: ${data.correctAnswer}<br/>
+          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
+          <br/>
+          <button onclick="editQuestion('${doc.id}')">Edit</button>
+          <button onclick="deleteQuestion('${doc.id}')">Delete</button>
+        </div>`;
+      });
+      questionsList.innerHTML = html;
+    } catch (error) {
+      questionsList.innerHTML = 'Error loading questions: ' + error.message;
+    }
+  }
+
+  // Reset form fields
+  function resetForm() {
+    questionForm.reset();
+    editDocId = null;
+    saveQuestionBtn.textContent = 'Add Question';
+  }
+
+  resetFormBtn.addEventListener('click', resetForm);
+
+  // Add or update question
+  questionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const qSubject = subjectSelect.value.trim();
+    const qQuestion = questionInput.value.trim();
+    const qOptions = [
+      option1.value.trim(),
+      option2.value.trim(),
+      option3.value.trim(),
+      option4.value.trim(),
+    ];
+    const qCorrect = correctAnswer.value.trim();
+    const qImage = imageUrl.value.trim();
+
+    if (!qSubject || !qQuestion || qOptions.some(opt => !opt) || !qCorrect) {
+      alert('Please fill all required fields.');
+      return;
+    }
+
+    if (!qOptions.includes(qCorrect)) {
+      alert('Correct answer must exactly match one of the options.');
+      return;
+    }
+
+    try {
+      if (editDocId) {
+        // Update existing question
+        await db.collection('questions').doc(editDocId).update({
+          subject: qSubject,
+          question: qQuestion,
+          options: qOptions,
+          correctAnswer: qCorrect,
+          imageUrl: qImage
+        });
+        alert('Question updated successfully!');
       } else {
-        questionList.innerHTML = "Select a subject to load questions.";
-      }
-    });
-
-    // Logout button
-    logoutBtn.onclick = () => {
-      auth.signOut();
-    };
-
-    // Load questions for selected subject (Option C: client-side sorting)
-    async function loadQuestionsForSubject(subject) {
-      questionList.innerHTML = "Loading questions...";
-      if (!subject) {
-        questionList.innerHTML = "Select a subject to load questions.";
-        return;
-      }
-
-      try {
-        // Query Firestore WITHOUT orderBy to avoid composite index error
-        const snapshot = await db.collection("questions")
-          .where("subject", "==", subject)
-          .get();
-
-        if (snapshot.empty) {
-          questionList.innerHTML = "No questions found for this subject.";
-          return;
-        }
-
-        const questions = [];
-        snapshot.forEach(doc => {
-          questions.push({ id: doc.id, ...doc.data() });
+        // Add new question
+        await db.collection('questions').add({
+          subject: qSubject,
+          question: qQuestion,
+          options: qOptions,
+          correctAnswer: qCorrect,
+          imageUrl: qImage
         });
-
-        // Sort questions client-side by question text
-        questions.sort((a, b) => a.question.localeCompare(b.question));
-
-        questionList.innerHTML = "";
-
-        questions.forEach(data => {
-          const div = document.createElement("div");
-          div.textContent = data.question;
-          div.dataset.id = data.id;
-          div.style.cursor = "pointer";
-          div.addEventListener("click", () => {
-            populateFormForEdit(data.id, data);
-          });
-          questionList.appendChild(div);
-        });
-      } catch (error) {
-        questionList.innerHTML = "Error loading questions: " + error.message;
+        alert('Question added successfully!');
       }
-    }
-
-    // When subject changes, load questions
-    subjectSelect.addEventListener("change", () => {
-      editingQuestionId = null;
       resetForm();
-      loadQuestionsForSubject(subjectSelect.value);
-    });
+      loadQuestions();
+    } catch (error) {
+      alert('Error saving question: ' + error.message);
+    }
+  });
 
-    // Fill form for editing
-    function populateFormForEdit(id, data) {
-      editingQuestionId = id;
-      formTitle.textContent = "Edit Question";
-      questionText.value = data.question || "";
-      imageUrl.value = data.imageUrl || "";
-      optionA.value = data.options?.A || "";
-      optionB.value = data.options?.B || "";
-      optionC.value = data.options?.C || "";
-      optionD.value = data.options?.D || "";
-      correctOption.value = data.correctOption || "";
-      message.textContent = "";
-      saveBtn.textContent = "Update Question";
+  // Edit question
+  window.editQuestion = async function (docId) {
+    try {
+      const doc = await db.collection('questions').doc(docId).get();
+      if (!doc.exists) {
+        alert('Question not found!');
+        return;
+      }
+      const data = doc.data();
+      subjectSelect.value = data.subject || '';
+      questionInput.value = data.question || '';
+      option1.value = data.options && data.options[0] || '';
+      option2.value = data.options && data.options[1] || '';
+      option3.value = data.options && data.options[2] || '';
+      option4.value = data.options && data.options[3] || '';
+      correctAnswer.value = data.correctAnswer || '';
+      imageUrl.value = data.imageUrl || '';
+      editDocId = docId;
+      saveQuestionBtn.textContent = 'Update Question';
+      window.scrollTo(0, 0);
+    } catch (error) {
+      alert('Error fetching question: ' + error.message);
+    }
+  };
+
+  // Delete question
+  window.deleteQuestion = async function (docId) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    try {
+      await db.collection('questions').doc(docId).delete();
+      alert('Question deleted successfully!');
+      loadQuestions();
+    } catch (error) {
+      alert('Error deleting question: ' + error.message);
+    }
+  };
+
+  // Bulk upload JSON questions
+  uploadJsonBtn.addEventListener('click', async () => {
+    const jsonStr = bulkUploadJson.value.trim();
+    if (!jsonStr) {
+      alert('Please paste JSON questions to upload.');
+      return;
     }
 
-    // Reset form to add new question
-    function resetForm() {
-      editingQuestionId = null;
-      formTitle.textContent = "Add New Question";
-      questionForm.reset();
-      message.textContent = "";
-      saveBtn.textContent = "Save Question";
+    let questionsArray;
+    try {
+      questionsArray = JSON.parse(jsonStr);
+      if (!Array.isArray(questionsArray)) {
+        alert('JSON must be an array of questions.');
+        return;
+      }
+    } catch (e) {
+      alert('Invalid JSON format.');
+      return;
     }
-    resetBtn.addEventListener("click", e => {
-      e.preventDefault();
-      resetForm();
-    });
 
-    // Save new or update existing question
-    questionForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      message.textContent = "";
-
-      const subject = subjectSelect.value;
-      if (!subject) {
-        message.textContent = "Please select a subject.";
+    // Validate all questions have required fields
+    for (const q of questionsArray) {
+      if (!q.subject || !q.question || !q.options || !q.correctAnswer) {
+        alert('Each question must have subject, question, options, and correctAnswer fields.');
         return;
       }
-
-      // Validate inputs
-      if (
-        !questionText.value.trim() ||
-        !optionA.value.trim() ||
-        !optionB.value.trim() ||
-        !optionC.value.trim() ||
-        !optionD.value.trim() ||
-        !correctOption.value
-      ) {
-        message.textContent = "Please fill all required fields.";
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        alert('Each question must have exactly 4 options.');
         return;
       }
-
-      const questionData = {
-        subject,
-        question: questionText.value.trim(),
-        imageUrl: imageUrl.value.trim() || "",
-        options: {
-          A: optionA.value.trim(),
-          B: optionB.value.trim(),
-          C: optionC.value.trim(),
-          D: optionD.value.trim(),
-        },
-        correctOption: correctOption.value,
-      };
-
-      try {
-        if (editingQuestionId) {
-          // Update existing
-          await db.collection("questions").doc(editingQuestionId).update(questionData);
-          message.style.color = "green";
-          message.textContent = "Question updated successfully.";
-        } else {
-          // Add new
-          await db.collection("questions").add(questionData);
-          message.style.color = "green";
-          message.textContent = "Question added successfully.";
-        }
-        resetForm();
-        loadQuestionsForSubject(subject);
-      } catch (error) {
-        message.style.color = "red";
-        message.textContent = "Error saving question: " + error.message;
-      }
-    });
-
-    // Bulk upload JSON file
-    const jsonFileInput = document.getElementById("jsonFileInput");
-    const uploadJsonBtn = document.getElementById("uploadJsonBtn");
-    const exportBtn = document.getElementById("exportBtn");
-
-    uploadJsonBtn.addEventListener("click", async () => {
-      bulkMessage.textContent = "";
-      if (!jsonFileInput.files.length) {
-        bulkMessage.style.color = "red";
-        bulkMessage.textContent = "Please select a JSON file to upload.";
+      if (!q.options.includes(q.correctAnswer)) {
+        alert('Correct answer must exactly match one of the options.');
         return;
       }
-      const file = jsonFileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = async event => {
-        try {
-          const jsonData = JSON.parse(event.target.result);
-          if (!Array.isArray(jsonData)) throw new Error("JSON must be an array of questions.");
+    }
 
-          let addedCount = 0;
-          for (const q of jsonData) {
-            // Basic validation for required fields
-            if (!q.subject || !q.question || !q.options || !q.correctOption) continue;
+    try {
+      const batch = db.batch();
+      questionsArray.forEach(q => {
+        const docRef = db.collection('questions').doc();
+        batch.set(docRef, q);
+      });
+      await batch.commit();
+      alert('Bulk upload successful!');
+      bulkUploadJson.value = '';
+      loadQuestions();
+    } catch (error) {
+      alert('Bulk upload failed: ' + error.message);
+    }
+  });
 
-            await db.collection("questions").add(q);
-            addedCount++;
-          }
+  // Export all questions as JSON
+  exportJsonBtn.addEventListener('click', async () => {
+    try {
+      const snapshot = await db.collection('questions').get();
+      const questions = snapshot.docs.map(doc => doc.data());
+      const jsonStr = JSON.stringify(questions, null, 2);
 
-          bulkMessage.style.color = "green";
-          bulkMessage.textContent = `${addedCount} questions uploaded successfully.`;
-          if(subjectSelect.value) loadQuestionsForSubject(subjectSelect.value);
-        } catch (err) {
-          bulkMessage.style.color = "red";
-          bulkMessage.textContent = "Error uploading JSON: " + err.message;
-        }
-      };
-      reader.readAsText(file);
-    });
+      // Download JSON file
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'questions_export.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Export failed: ' + error.message);
+    }
+  });
 
-    // Export questions as JSON file
-    exportBtn.addEventListener("click", async () => {
-      const subject = subjectSelect.value;
-      if (!subject) {
-        bulkMessage.style.color = "red";
-        bulkMessage.textContent = "Please select a subject to export.";
-        return;
-      }
+</script>
 
-      try {
-        const snapshot = await db.collection("questions")
-          .where("subject", "==", subject)
-          .get();
-
-        const questions = [];
-        snapshot.forEach(doc => questions.push(doc.data()));
-
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
-        const dlAnchor = document.createElement("a");
-        dlAnchor.setAttribute("href", dataStr);
-        dlAnchor.setAttribute("download", `${subject}_questions.json`);
-        document.body.appendChild(dlAnchor);
-        dlAnchor.click();
-        dlAnchor.remove();
-
-        bulkMessage.style.color = "green";
-        bulkMessage.textContent = `Exported ${questions.length} questions for ${subject}.`;
-      } catch (error) {
-        bulkMessage.style.color = "red";
-        bulkMessage.textContent = "Error exporting questions: " + error.message;
-      }
-    });
-  </script>
 </body>
 </html>
