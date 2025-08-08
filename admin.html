@@ -6,9 +6,9 @@
 <title>NEET PG Admin Panel</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-  h1 { color: #344ea3; }
+  h1, h2 { color: #344ea3; }
   label { display: block; margin-top: 10px; font-weight: bold; }
-  input[type=text], select, textarea {
+  input[type=text], input[type=email], input[type=password], select, textarea {
     width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #344ea3;
   }
   button {
@@ -49,77 +49,92 @@
     padding: 5px 8px;
     font-size: 0.9rem;
   }
+  #errorMsg { color: red; margin-top: 10px; }
 </style>
 </head>
 <body>
 
 <h1>NEET PG Admin Panel</h1>
 
-<form id="questionForm">
-  <label for="subjectSelect">Select Subject:</label>
-  <select id="subjectSelect" required>
-    <optgroup label="1st Year">
-      <option value="Anatomy">Anatomy</option>
-      <option value="Physiology">Physiology</option>
-      <option value="Biochemistry">Biochemistry</option>
-    </optgroup>
-    <optgroup label="2nd Year">
-      <option value="Pathology">Pathology</option>
-      <option value="Pharmacology">Pharmacology</option>
-      <option value="Microbiology">Microbiology</option>
-      <option value="Forensic Medicine">Forensic Medicine</option>
-    </optgroup>
-    <optgroup label="3rd Year">
-      <option value="Community Medicine">Community Medicine</option>
-      <option value="ENT">ENT</option>
-      <option value="Ophthalmology">Ophthalmology</option>
-    </optgroup>
-    <optgroup label="Final Year">
-      <option value="General Medicine">General Medicine</option>
-      <option value="General Surgery">General Surgery</option>
-      <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
-      <option value="Pediatrics">Pediatrics</option>
-      <option value="Orthopaedics">Orthopaedics</option>
-      <option value="Dermatology">Dermatology</option>
-      <option value="Psychiatry">Psychiatry</option>
-      <option value="Respiratory Medicine">Respiratory Medicine</option>
-      <option value="Anesthesiology">Anesthesiology</option>
-    </optgroup>
-  </select>
+<div id="loginContainer">
+  <h2>Admin Login</h2>
+  <label for="adminEmailInput">Email:</label>
+  <input type="email" id="adminEmailInput" placeholder="Enter admin email" required />
+  <label for="adminPasswordInput">Password:</label>
+  <input type="password" id="adminPasswordInput" placeholder="Enter password" required />
+  <button id="adminLoginBtn">Login</button>
+  <div id="errorMsg"></div>
+</div>
 
-  <label for="questionInput">Question:</label>
-  <textarea id="questionInput" required></textarea>
+<div id="adminPanel" style="display:none;">
+  <button id="logoutBtn" style="float:right; background:#c0392b;">Logout</button>
 
-  <label for="option1">Option 1:</label>
-  <input type="text" id="option1" required />
+  <form id="questionForm">
+    <label for="subjectSelect">Select Subject:</label>
+    <select id="subjectSelect" required>
+      <optgroup label="1st Year">
+        <option value="Anatomy">Anatomy</option>
+        <option value="Physiology">Physiology</option>
+        <option value="Biochemistry">Biochemistry</option>
+      </optgroup>
+      <optgroup label="2nd Year">
+        <option value="Pathology">Pathology</option>
+        <option value="Pharmacology">Pharmacology</option>
+        <option value="Microbiology">Microbiology</option>
+        <option value="Forensic Medicine">Forensic Medicine</option>
+      </optgroup>
+      <optgroup label="3rd Year">
+        <option value="Community Medicine">Community Medicine</option>
+        <option value="ENT">ENT</option>
+        <option value="Ophthalmology">Ophthalmology</option>
+      </optgroup>
+      <optgroup label="Final Year">
+        <option value="General Medicine">General Medicine</option>
+        <option value="General Surgery">General Surgery</option>
+        <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
+        <option value="Pediatrics">Pediatrics</option>
+        <option value="Orthopaedics">Orthopaedics</option>
+        <option value="Dermatology">Dermatology</option>
+        <option value="Psychiatry">Psychiatry</option>
+        <option value="Respiratory Medicine">Respiratory Medicine</option>
+        <option value="Anesthesiology">Anesthesiology</option>
+      </optgroup>
+    </select>
 
-  <label for="option2">Option 2:</label>
-  <input type="text" id="option2" required />
+    <label for="questionInput">Question:</label>
+    <textarea id="questionInput" required></textarea>
 
-  <label for="option3">Option 3:</label>
-  <input type="text" id="option3" required />
+    <label for="option1">Option 1:</label>
+    <input type="text" id="option1" required />
 
-  <label for="option4">Option 4:</label>
-  <input type="text" id="option4" required />
+    <label for="option2">Option 2:</label>
+    <input type="text" id="option2" required />
 
-  <label for="correctAnswer">Correct Answer (must exactly match one option):</label>
-  <input type="text" id="correctAnswer" required />
+    <label for="option3">Option 3:</label>
+    <input type="text" id="option3" required />
 
-  <label for="imageUrl">Image URL (optional):</label>
-  <input type="text" id="imageUrl" placeholder="https://example.com/image.png" />
+    <label for="option4">Option 4:</label>
+    <input type="text" id="option4" required />
 
-  <button type="submit" id="saveQuestionBtn">Add Question</button>
-  <button type="button" id="resetFormBtn">Reset Form</button>
-</form>
+    <label for="correctAnswer">Correct Answer (must exactly match one option):</label>
+    <input type="text" id="correctAnswer" required />
 
-<h2>Bulk Upload Questions (JSON Array)</h2>
-<textarea id="bulkUploadJson" placeholder='Paste JSON array of questions here...' style="width:100%; height:150px;"></textarea>
-<br />
-<button id="uploadJsonBtn">Upload JSON</button>
-<button id="exportJsonBtn">Export All Questions to JSON</button>
+    <label for="imageUrl">Image URL (optional):</label>
+    <input type="text" id="imageUrl" placeholder="https://example.com/image.png" />
 
-<h2>Existing Questions</h2>
-<div id="questionsList">Loading questions...</div>
+    <button type="submit" id="saveQuestionBtn">Add Question</button>
+    <button type="button" id="resetFormBtn">Reset Form</button>
+  </form>
+
+  <h2>Bulk Upload Questions (JSON Array)</h2>
+  <textarea id="bulkUploadJson" placeholder='Paste JSON array of questions here...' style="width:100%; height:150px;"></textarea>
+  <br />
+  <button id="uploadJsonBtn">Upload JSON</button>
+  <button id="exportJsonBtn">Export All Questions to JSON</button>
+
+  <h2>Existing Questions</h2>
+  <div id="questionsList">Loading questions...</div>
+</div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -127,7 +142,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -142,9 +156,86 @@
   const db = firebase.firestore();
   const auth = firebase.auth();
 
-  // Admin credentials
   const adminEmail = 'y3knishu@gmail.com';
   const adminPassword = 'xrnb21r72W@';
+
+  const loginContainer = document.getElementById('loginContainer');
+  const adminPanel = document.getElementById('adminPanel');
+  const errorMsg = document.getElementById('errorMsg');
+
+  const adminEmailInput = document.getElementById('adminEmailInput');
+  const adminPasswordInput = document.getElementById('adminPasswordInput');
+  const adminLoginBtn = document.getElementById('adminLoginBtn');
+
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  let editDocId = null;
+
+  adminLoginBtn.addEventListener('click', async () => {
+    errorMsg.textContent = '';
+    const email = adminEmailInput.value.trim();
+    const password = adminPasswordInput.value.trim();
+
+    if (email !== adminEmail) {
+      errorMsg.textContent = 'Only admin user allowed.';
+      return;
+    }
+    if (!email || !password) {
+      errorMsg.textContent = 'Please enter email and password.';
+      return;
+    }
+
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showAdminPanel();
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        // Optionally create user on first login
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          showAdminPanel();
+        } catch (signupErr) {
+          errorMsg.textContent = signupErr.message;
+        }
+      } else {
+        errorMsg.textContent = err.message;
+      }
+    }
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    await auth.signOut();
+    resetToLogin();
+  });
+
+  function showAdminPanel() {
+    loginContainer.style.display = 'none';
+    adminPanel.style.display = 'block';
+    loadQuestions();
+  }
+
+  function resetToLogin() {
+    adminEmailInput.value = '';
+    adminPasswordInput.value = '';
+    errorMsg.textContent = '';
+    loginContainer.style.display = 'block';
+    adminPanel.style.display = 'none';
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (user.email === adminEmail) {
+        showAdminPanel();
+      } else {
+        resetToLogin();
+        auth.signOut();
+      }
+    } else {
+      resetToLogin();
+    }
+  });
+
+  // Question form and CRUD logic
 
   const questionForm = document.getElementById('questionForm');
   const subjectSelect = document.getElementById('subjectSelect');
@@ -162,53 +253,11 @@
   const exportJsonBtn = document.getElementById('exportJsonBtn');
   const questionsList = document.getElementById('questionsList');
 
-  let editDocId = null;
-
-  // Auto admin login
-  async function adminLogin() {
-    try {
-      await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
-      loadQuestions();
-    } catch (error) {
-      alert('Admin login failed: ' + error.message);
-      window.location.href = 'login.html'; // Redirect if failed
-    }
-  }
-  adminLogin();
-
-  async function loadQuestions() {
-    questionsList.textContent = 'Loading questions...';
-    try {
-      const snapshot = await db.collection('questions').orderBy('subject').orderBy('question').get();
-      if (snapshot.empty) {
-        questionsList.textContent = 'No questions found.';
-        return;
-      }
-      let html = '';
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        html += `<div class="question-item" data-id="${doc.id}">
-          <strong>[${data.subject}]</strong> ${data.question}<br/>
-          Options: ${data.options ? data.options.join(', ') : ''}<br/>
-          Correct: ${data.correctAnswer}<br/>
-          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
-          <br/>
-          <button onclick="editQuestion('${doc.id}')">Edit</button>
-          <button onclick="deleteQuestion('${doc.id}')">Delete</button>
-        </div>`;
-      });
-      questionsList.innerHTML = html;
-    } catch (error) {
-      questionsList.textContent = 'Error loading questions: ' + error.message;
-    }
-  }
-
-  function resetForm() {
+  resetFormBtn.addEventListener('click', () => {
     questionForm.reset();
     editDocId = null;
     saveQuestionBtn.textContent = 'Add Question';
-  }
-  resetFormBtn.addEventListener('click', resetForm);
+  });
 
   questionForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -253,47 +302,12 @@
         });
         alert('Question added successfully!');
       }
-      resetForm();
+      resetFormBtn.click();
       loadQuestions();
     } catch (error) {
       alert('Error saving question: ' + error.message);
     }
   });
-
-  window.editQuestion = async function(docId) {
-    try {
-      const doc = await db.collection('questions').doc(docId).get();
-      if (!doc.exists) {
-        alert('Question not found!');
-        return;
-      }
-      const data = doc.data();
-      subjectSelect.value = data.subject || '';
-      questionInput.value = data.question || '';
-      option1.value = data.options && data.options[0] || '';
-      option2.value = data.options && data.options[1] || '';
-      option3.value = data.options && data.options[2] || '';
-      option4.value = data.options && data.options[3] || '';
-      correctAnswer.value = data.correctAnswer || '';
-      imageUrl.value = data.imageUrl || '';
-      editDocId = docId;
-      saveQuestionBtn.textContent = 'Update Question';
-      window.scrollTo(0, 0);
-    } catch (error) {
-      alert('Error fetching question: ' + error.message);
-    }
-  };
-
-  window.deleteQuestion = async function(docId) {
-    if (!confirm('Are you sure you want to delete this question?')) return;
-    try {
-      await db.collection('questions').doc(docId).delete();
-      alert('Question deleted successfully!');
-      loadQuestions();
-    } catch (error) {
-      alert('Error deleting question: ' + error.message);
-    }
-  };
 
   uploadJsonBtn.addEventListener('click', async () => {
     const jsonStr = bulkUploadJson.value.trim();
@@ -313,7 +327,6 @@
       return;
     }
 
-    // Validate questions
     for (const q of questionsArray) {
       if (!q.subject || !q.question || !q.options || !q.correctAnswer) {
         alert('Each question must have subject, question, options, and correctAnswer fields.');
@@ -364,6 +377,67 @@
     }
   });
 
+  async function loadQuestions() {
+    questionsList.textContent = 'Loading questions...';
+    try {
+      const snapshot = await db.collection('questions').orderBy('subject').orderBy('question').get();
+      if (snapshot.empty) {
+        questionsList.textContent = 'No questions found.';
+        return;
+      }
+      let html = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        html += `<div class="question-item" data-id="${doc.id}">
+          <strong>[${data.subject}]</strong> ${data.question}<br/>
+          Options: ${data.options ? data.options.join(', ') : ''}<br/>
+          Correct: ${data.correctAnswer}<br/>
+          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Image" style="max-width:150px; margin-top:5px;">` : ''}
+          <br/>
+          <button onclick="editQuestion('${doc.id}')">Edit</button>
+          <button onclick="deleteQuestion('${doc.id}')">Delete</button>
+        </div>`;
+      });
+      questionsList.innerHTML = html;
+    } catch (error) {
+      questionsList.textContent = 'Error loading questions: ' + error.message;
+    }
+  }
+
+  window.editQuestion = async function(docId) {
+    try {
+      const doc = await db.collection('questions').doc(docId).get();
+      if (!doc.exists) {
+        alert('Question not found!');
+        return;
+      }
+      const data = doc.data();
+      subjectSelect.value = data.subject || '';
+      questionInput.value = data.question || '';
+      option1.value = data.options && data.options[0] || '';
+      option2.value = data.options && data.options[1] || '';
+      option3.value = data.options && data.options[2] || '';
+      option4.value = data.options && data.options[3] || '';
+      correctAnswer.value = data.correctAnswer || '';
+      imageUrl.value = data.imageUrl || '';
+      editDocId = docId;
+      saveQuestionBtn.textContent = 'Update Question';
+      window.scrollTo(0, 0);
+    } catch (error) {
+      alert('Error fetching question: ' + error.message);
+    }
+  };
+
+  window.deleteQuestion = async function(docId) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    try {
+      await db.collection('questions').doc(docId).delete();
+      alert('Question deleted successfully!');
+      loadQuestions();
+    } catch (error) {
+      alert('Error deleting question: ' + error.message);
+    }
+  };
 </script>
 
 </body>
