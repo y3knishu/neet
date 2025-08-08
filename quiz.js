@@ -1,4 +1,3 @@
-
 const firebaseConfig = {
   apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
   authDomain: "neet-88499.firebaseapp.com",
@@ -8,249 +7,192 @@ const firebaseConfig = {
   appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
   measurementId: "G-GEG090K2JQ"
 };
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser = null;
-let subject = null;
+const urlParams = new URLSearchParams(window.location.search);
+const subject = urlParams.get("subject");
+if (!subject) {
+  alert("Subject not specified!");
+  window.location.href = "index.html";
+}
 
-const paletteDiv = document.getElementById("palette");
-const questionText = document.getElementById("questionText");
-const questionImage = document.getElementById("questionImage");
-const optionsContainer = document.getElementById("optionsContainer");
+const questionNumberEl = document.getElementById("questionNumber");
+const questionTextEl = document.getElementById("questionText");
+const questionImageEl = document.getElementById("questionImage");
+const optionsEl = document.getElementById("options");
+const paletteEl = document.getElementById("palette");
+
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const submitBtn = document.getElementById("submitBtn");
-const resetBtn = document.getElementById("resetBtn");
-const backHomeBtn = document.getElementById("backHomeBtn");
-const scoreSummary = document.getElementById("scoreSummary");
+const retryBtn = document.getElementById("retryBtn");
+const homeBtn = document.getElementById("homeBtn");
+
+const resultSummary = document.getElementById("resultSummary");
+const correctCountEl = document.getElementById("correctCount");
+const wrongCountEl = document.getElementById("wrongCount");
+const attemptedCountEl = document.getElementById("attemptedCount");
+const totalScoreEl = document.getElementById("totalScore");
 
 let questions = [];
-let currentQuestionIndex = 0;
-let userAnswers = {}; // key: question index, value: selected option index
+let currentIndex = 0;
+let answers = {}; // key=questionId, value = chosen option index
+let correctAnswers = {}; // key=questionId, value = correct answer index
 
-function parseQueryParams() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("subject");
-}
+let currentUser = null;
+let userProgressDoc = null;
 
-async function loadQuestions(subjectName) {
-  subject = subjectName;
-  const qSnap = await db.collection("questions")
-    .where("subject", "==", subjectName)
-    .orderBy("questionNumber")
-    .get();
-
-  questions = qSnap.docs.map(doc => {
-    let d = doc.data();
-    return {
-      id: doc.id,
-      questionNumber: d.questionNumber,
-      question: d.question,
-      options: d.options,
-      answer: d.answer,
-      imageUrl: d.imageUrl || null
-    };
-  });
-
-  // If no questions, show message
-  if (questions.length === 0) {
-    questionText.innerText = "No questions found for this subject.";
-    optionsContainer.innerHTML = "";
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    alert("You must login to attempt quiz");
+    window.location.href = "index.html";
     return;
   }
+  currentUser = user;
+  loadQuestions();
+});
 
-  // Load user answers from Firestore if logged in
-  if (currentUser) {
-    const progressDoc = await db.collection("users").doc(currentUser.uid)
-      .collection("progress").doc(subject).get();
-    if (progressDoc.exists) {
-      userAnswers = progressDoc.data().userAnswers || {};
-      currentQuestionIndex = progressDoc.data().lastQuestionIndex || 0;
-    }
+async function loadQuestions() {
+  const snapshot = await db.collection("questions")
+    .where("subject", "==", subject)
+    .orderBy("questionNumber")
+    .get();
+  if (snapshot.empty) {
+    alert("No questions found for " + subject);
+    window.location.href = "index.html";
+    return;
+  }
+  questions = [];
+  snapshot.forEach(doc => {
+    const q = doc.data();
+    q.id = doc.id;
+    questions.push(q);
+    correctAnswers[doc.id] = q.answer;
+  });
+
+  // Load user progress if any
+  const progressRef = db.collection("users").doc(currentUser.uid).collection("progress").doc(subject);
+  userProgressDoc = progressRef;
+  const progressSnap = await progressRef.get();
+  if (progressSnap.exists) {
+    const data = progressSnap.data();
+    answers = data.answers || {};
   }
 
   renderPalette();
-  renderQuestion();
-  updateNavigationButtons();
-  updateSubmitButton();
+  showQuestion(currentIndex);
 }
 
 function renderPalette() {
-  paletteDiv.innerHTML = "";
-  questions.forEach((q, idx) => {
-    const btn = document.createElement("button");
-    btn.textContent = idx + 1;
-    btn.className = "";
-    if (userAnswers[idx] !== undefined) {
-      const correct = questions[idx].answer;
-      if (userAnswers[idx] === correct) btn.classList.add("correct");
-      else btn.classList.add("wrong");
-    }
-    if (idx === currentQuestionIndex) btn.classList.add("current");
-    btn.onclick = () => {
-      currentQuestionIndex = idx;
-      renderQuestion();
-      updateNavigationButtons();
-      updateSubmitButton();
-      renderPalette();
-    };
-    paletteDiv.appendChild(btn);
-  });
-}
-
-function renderQuestion() {
-  const q = questions[currentQuestionIndex];
-  questionText.innerText = `Q${q.questionNumber}. ${q.question}`;
-
-  if (q.imageUrl) {
-    questionImage.src = q.imageUrl;
-    questionImage.style.display = "block";
-  } else {
-    questionImage.style.display = "none";
-  }
-
-  optionsContainer.innerHTML = "";
-
-  q.options.forEach((opt, idx) => {
+  paletteEl.innerHTML = "";
+  questions.forEach((q, i) => {
     const div = document.createElement("div");
-    div.className = "option";
+    div.classList.add("palette-item");
+    if (i === currentIndex) div.classList.add("current");
+
+    if (answers[q.id] !== undefined) {
+      div.classList.add("answered");
+      if (answers[q.id] === correctAnswers[q.id]) div.classList.add("correct");
+      else div.classList.add("wrong");
+    }
+    div.textContent = i + 1;
+    div.onclick = () => {
+      if (i === currentIndex) return;
+      currentIndex = i;
+      showQuestion(currentIndex);
+    };
+    paletteEl.appendChild(div);
+  });
+}
+
+function showQuestion(index) {
+  const q = questions[index];
+  questionNumberEl.textContent = `Q${q.questionNumber}`;
+  questionTextEl.textContent = q.question;
+  if (q.imageUrl) {
+    questionImageEl.src = q.imageUrl;
+    questionImageEl.style.display = "block";
+  } else {
+    questionImageEl.style.display = "none";
+  }
+  optionsEl.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const div = document.createElement("div");
+    div.classList.add("option");
     div.textContent = opt;
-    div.onclick = () => selectAnswer(idx);
-    if (userAnswers[currentQuestionIndex] !== undefined) {
-      const correctIndex = q.answer;
-      if (idx === userAnswers[currentQuestionIndex]) {
-        if (idx === correctIndex) div.classList.add("correct");
-        else div.classList.add("wrong");
-      } else if (idx === correctIndex) {
-        div.classList.add("correct");
-      }
-      div.style.cursor = "default";
+    if (answers[q.id] !== undefined) {
+      div.classList.add("disabled");
+      if (i === correctAnswers[q.id]) div.classList.add("correct");
+      if (i === answers[q.id] && answers[q.id] !== correctAnswers[q.id]) div.classList.add("wrong");
     }
-    optionsContainer.appendChild(div);
+    div.onclick = () => {
+      if (answers[q.id] !== undefined) return;
+      answers[q.id] = i;
+      saveProgress();
+      renderPalette();
+      showQuestion(currentIndex);
+    };
+    optionsEl.appendChild(div);
   });
+  updateNavButtons();
 }
 
-function selectAnswer(optionIndex) {
-  if (userAnswers[currentQuestionIndex] !== undefined) return; // prevent change after answering
-
-  userAnswers[currentQuestionIndex] = optionIndex;
-  renderQuestion();
-  renderPalette();
-  updateSubmitButton();
-
-  saveProgress();
-}
-
-function updateNavigationButtons() {
-  prevBtn.disabled = currentQuestionIndex === 0;
-  nextBtn.disabled = currentQuestionIndex === questions.length - 1;
-}
-
-function updateSubmitButton() {
-  const totalAnswered = Object.keys(userAnswers).length;
-  submitBtn.disabled = totalAnswered === 0;
-}
-
-function saveProgress() {
-  if (!currentUser) return;
-  db.collection("users").doc(currentUser.uid).collection("progress").doc(subject).set({
-    userAnswers,
-    lastQuestionIndex: currentQuestionIndex,
-    totalQuestions: questions.length
-  });
-}
-
-function calculateScore() {
-  let correct = 0, wrong = 0, attempted = 0;
-  questions.forEach((q, idx) => {
-    const userAns = userAnswers[idx];
-    if (userAns !== undefined) {
-      attempted++;
-      if (userAns === q.answer) correct++;
-      else wrong++;
-    }
-  });
-  return { correct, wrong, attempted };
-}
-
-function showScoreSummary() {
-  const { correct, wrong, attempted } = calculateScore();
-  const score = (correct * 4) - (wrong * 1);
-  scoreSummary.innerHTML = `
-    <strong>Score Summary</strong><br/>
-    Attempted: ${attempted}<br/>
-    Correct: ${correct}<br/>
-    Wrong: ${wrong}<br/>
-    <br/>
-    Total Score: ${score}
-  `;
-}
-
-function resetTest() {
-  if (!confirm("Are you sure you want to reset this test? All answers will be cleared.")) return;
-  userAnswers = {};
-  currentQuestionIndex = 0;
-  saveProgress();
-  renderQuestion();
-  renderPalette();
-  updateNavigationButtons();
-  updateSubmitButton();
-  scoreSummary.innerHTML = "";
+function updateNavButtons() {
+  prevBtn.disabled = currentIndex === 0;
+  nextBtn.disabled = currentIndex === questions.length - 1;
+  submitBtn.style.display = "inline-block";
+  retryBtn.style.display = "none";
+  resultSummary.style.display = "none";
 }
 
 prevBtn.onclick = () => {
-  if (currentQuestionIndex > 0) {
-    currentQuestionIndex--;
-    renderQuestion();
-    updateNavigationButtons();
-    updateSubmitButton();
-    renderPalette();
+  if (currentIndex > 0) {
+    currentIndex--;
+    showQuestion(currentIndex);
   }
 };
 
 nextBtn.onclick = () => {
-  if (currentQuestionIndex < questions.length - 1) {
-    currentQuestionIndex++;
-    renderQuestion();
-    updateNavigationButtons();
-    updateSubmitButton();
-    renderPalette();
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    showQuestion(currentIndex);
   }
 };
 
 submitBtn.onclick = () => {
-  if (Object.keys(userAnswers).length === 0) {
-    alert("Please attempt at least one question.");
-    return;
-  }
-  showScoreSummary();
+  let correct = 0, wrong = 0, attempted = 0;
+  questions.forEach(q => {
+    if (answers[q.id] !== undefined) {
+      attempted++;
+      if (answers[q.id] === correctAnswers[q.id]) correct++;
+      else wrong++;
+    }
+  });
+  const totalScore = (correct * 4) - (wrong);
+  correctCountEl.textContent = correct;
+  wrongCountEl.textContent = wrong;
+  attemptedCountEl.textContent = attempted;
+  totalScoreEl.textContent = totalScore;
+
+  resultSummary.style.display = "block";
+  submitBtn.style.display = "none";
+  retryBtn.style.display = "inline-block";
 };
 
-resetBtn.onclick = resetTest;
+retryBtn.onclick = () => {
+  answers = {};
+  saveProgress();
+  currentIndex = 0;
+  showQuestion(currentIndex);
+};
 
-backHomeBtn.onclick = () => {
+homeBtn.onclick = () => {
   window.location.href = "index.html";
 };
 
-auth.onAuthStateChanged(user => {
-  currentUser = user;
-  // If no user, redirect to home because quiz needs login
-  if (!user) {
-    alert("Please login first to attempt quiz.");
-    window.location.href = "index.html";
-  } else {
-    subject = parseQueryParams();
-    if (!subject) {
-      alert("No subject selected. Redirecting to home.");
-      window.location.href = "index.html";
-    } else {
-      loadQuestions(subject);
-    }
-  }
-});
+async function saveProgress() {
+  if (!currentUser) return;
+  await userProgressDoc.set({ answers }, { merge: true });
+}
