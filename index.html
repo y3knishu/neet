@@ -1,14 +1,102 @@
-<!-- Add this in <head> or before </body> -->
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NEET PG Quiz - Home</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #eef4ff;
+    margin: 20px;
+    color: #222;
+  }
+  h1 {
+    color: #344ea3;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  #subjectContainer {
+    max-width: 900px;
+    margin: auto;
+  }
+  h2 {
+    margin-top: 30px;
+    color: #344ea3;
+    border-bottom: 2px solid #344ea3;
+    padding-bottom: 5px;
+  }
+  .subject-card {
+    display: inline-block;
+    width: 210px;
+    height: 130px;
+    margin: 10px;
+    border-radius: 12px;
+    color: #fff;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease;
+  }
+  .subject-card:hover {
+    transform: scale(1.05);
+  }
+  .lock-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .lock-overlay button {
+    margin-top: 10px;
+    background: #f44336;
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+  .lock-overlay button:hover {
+    background: #d32f2f;
+  }
+  #logoutBtn {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: #c0392b;
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>NEET PG Quiz Subjects</h1>
 
 <div id="subjectContainer"></div>
+
+<button id="logoutBtn">Logout</button>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // Your firebase config
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -48,60 +136,30 @@
   ];
 
   const subjectContainer = document.getElementById("subjectContainer");
+  const logoutBtn = document.getElementById("logoutBtn");
 
   function createSubjectCard(subject, unlocked) {
     const card = document.createElement("div");
+    card.className = "subject-card";
     card.style.backgroundColor = subject.color;
-    card.style.color = "#fff";
-    card.style.padding = "20px";
-    card.style.margin = "10px";
-    card.style.borderRadius = "12px";
-    card.style.width = "220px";
-    card.style.display = "inline-block";
-    card.style.position = "relative";
-    card.style.textAlign = "center";
-    card.style.cursor = unlocked ? "pointer" : "default";
-
-    card.innerHTML = `<h3>${subject.name}</h3><small>${subject.year}</small>`;
+    card.textContent = subject.name;
+    card.title = `${subject.name} - ${subject.year}`;
 
     if (!unlocked) {
-      // Lock overlay and pay button
-      const lockOverlay = document.createElement("div");
-      lockOverlay.style.position = "absolute";
-      lockOverlay.style.top = 0;
-      lockOverlay.style.left = 0;
-      lockOverlay.style.width = "100%";
-      lockOverlay.style.height = "100%";
-      lockOverlay.style.background = "rgba(0,0,0,0.6)";
-      lockOverlay.style.borderRadius = "12px";
-      lockOverlay.style.display = "flex";
-      lockOverlay.style.flexDirection = "column";
-      lockOverlay.style.justifyContent = "center";
-      lockOverlay.style.alignItems = "center";
-      lockOverlay.style.color = "white";
-
-      const lockIcon = document.createElement("div");
-      lockIcon.innerHTML = "🔒";
-      lockIcon.style.fontSize = "36px";
-      lockOverlay.appendChild(lockIcon);
-
-      const payBtn = document.createElement("button");
-      payBtn.textContent = "Pay ₹99 to Unlock";
-      payBtn.style.marginTop = "12px";
-      payBtn.style.padding = "8px 12px";
-      payBtn.style.border = "none";
-      payBtn.style.borderRadius = "6px";
-      payBtn.style.backgroundColor = "#f44336";
-      payBtn.style.color = "#fff";
-      payBtn.style.cursor = "pointer";
-
-      payBtn.onclick = () => openRazorpayCheckout();
-
-      lockOverlay.appendChild(payBtn);
-      card.appendChild(lockOverlay);
+      card.style.cursor = "default";
+      const overlay = document.createElement("div");
+      overlay.className = "lock-overlay";
+      overlay.innerHTML = `
+        <div style="font-size: 36px;">🔒</div>
+        <button>Pay ₹99 to Unlock</button>
+      `;
+      overlay.querySelector("button").onclick = (e) => {
+        e.stopPropagation();
+        openRazorpayCheckout();
+      };
+      card.appendChild(overlay);
     } else {
       card.onclick = () => {
-        // Redirect to quiz page with subject param
         window.location.href = `quiz.html?subject=${encodeURIComponent(subject.name)}`;
       };
     }
@@ -111,19 +169,17 @@
 
   function renderSubjects(isPaid) {
     subjectContainer.innerHTML = "";
-
-    // Group by year
     const years = [...new Set(subjects.map(s => s.year))];
 
     years.forEach(year => {
-      const yearHeader = document.createElement("h2");
-      yearHeader.textContent = year;
-      subjectContainer.appendChild(yearHeader);
+      const h2 = document.createElement("h2");
+      h2.textContent = year;
+      subjectContainer.appendChild(h2);
 
       const yearSubjects = subjects.filter(s => s.year === year);
 
       yearSubjects.forEach(subject => {
-        const unlocked = subject.name === "Anatomy" || isPaid;
+        const unlocked = (subject.name === "Anatomy") || isPaid;
         const card = createSubjectCard(subject, unlocked);
         subjectContainer.appendChild(card);
       });
@@ -145,26 +201,26 @@
       description: "Unlock all subjects except Anatomy",
       handler: function (response) {
         alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
-        // Update Firestore user document isPaid flag
         db.collection('users').doc(user.uid).set({ isPaid: true }, { merge: true })
           .then(() => {
             renderSubjects(true);
           })
           .catch(err => alert("Failed to update payment status: " + err.message));
       },
-      prefill: {
-        email: user.email,
-      },
-      theme: {
-        color: "#344ea3"
-      }
+      prefill: { email: user.email },
+      theme: { color: "#344ea3" }
     };
     const rzp = new Razorpay(options);
     rzp.open();
   }
 
+  logoutBtn.onclick = () => {
+    auth.signOut();
+  };
+
   auth.onAuthStateChanged(user => {
     if (user) {
+      logoutBtn.style.display = "block";
       db.collection('users').doc(user.uid).get()
         .then(doc => {
           const isPaid = doc.exists && doc.data().isPaid;
@@ -172,7 +228,11 @@
         })
         .catch(() => renderSubjects(false));
     } else {
+      logoutBtn.style.display = "none";
       renderSubjects(false);
     }
   });
 </script>
+
+</body>
+</html>
