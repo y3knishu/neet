@@ -1,3 +1,11 @@
+// Razorpay + Firebase Functions API base URL
+const PROJECT_ID = "neetpg-quiz-app"; // <-- Replace with your actual Firebase project ID
+const IS_LOCAL = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+const FUNCTIONS_BASE_URL = IS_LOCAL
+  ? `http://127.0.0.1:5001/${PROJECT_ID}/us-central1/api`
+  : `https://us-central1-${PROJECT_ID}.cloudfunctions.net/api`;
+
 // Main frontend logic (auth, homepage, quiz)
 const RAZORPAY_KEY = 'rzp_live_7nZptAUoDrsfRb'; // your key
 const ADMIN_EMAIL = 'y3knishu@gmail.com';
