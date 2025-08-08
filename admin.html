@@ -1,221 +1,293 @@
+Got it! Let me help you build a solid admin panel page for your NEET PG quiz app with these features:
+	•	Admin login check (only y3knishu@gmail.com allowed)
+	•	Add / edit / delete MCQs per subject
+	•	Upload questions in bulk via JSON file
+	•	Export all questions as JSON file
+	•	Image URL support per question
+	•	Firestore integration for question storage
+
+⸻
+
+Here’s a complete admin.html example with all these:
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Admin Panel - NEET PG Quiz</title>
+<title>NEET PG Quiz Admin Panel</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    margin: 0; padding: 0 20px;
-    background: #f0f4f8;
-    color: #222;
+    background: #eef2ff;
+    margin: 0; padding: 0;
   }
   header {
-    padding: 15px 0;
-    border-bottom: 2px solid #344ea3;
-    margin-bottom: 20px;
+    background: #344ea3;
+    color: white;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
   header h1 {
-    color: #344ea3;
+    margin: 0; font-size: 1.5rem;
   }
-  #logoutBtn {
-    background: #c0392b;
-    color: white;
+  button#logoutBtn {
+    background: #f97316;
     border: none;
-    padding: 8px 14px;
-    border-radius: 5px;
-    cursor: pointer;
+    padding: 8px 16px;
+    color: white;
     font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
   }
-  #logoutBtn:hover {
-    background: #e74c3c;
-  }
-  #loginSection, #adminPanel {
-    max-width: 900px;
-    margin: auto;
-    background: white;
+  main {
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    max-width: 1000px;
+    margin: auto;
   }
-  input[type="email"], input[type="password"], select, textarea, input[type="text"], input[type="file"] {
-    width: 100%;
-    padding: 8px 10px;
-    margin: 8px 0 16px 0;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+  select, input, textarea, button {
     font-size: 1rem;
+  }
+  select, input[type="text"], textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0 12px;
+    border-radius: 6px;
+    border: 1.5px solid #344ea3;
   }
   label {
     font-weight: bold;
   }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
   button {
     background: #344ea3;
-    border: none;
     color: white;
-    padding: 10px 18px;
-    border-radius: 6px;
+    border: none;
+    padding: 12px 20px;
+    margin-top: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: bold;
-    margin-right: 10px;
+    font-weight: 600;
   }
   button:hover {
-    background: #1e2a78;
+    background: #2a3a81;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+  .section {
+    background: white;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+  #questionsList {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1.5px solid #344ea3;
+    border-radius: 8px;
+    padding: 10px;
   }
-  th {
-    background: #344ea3;
-    color: white;
-  }
-  .action-btn {
-    background: #e67e22;
-    border: none;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 5px;
+  #questionsList div {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
     cursor: pointer;
-    font-weight: bold;
-    margin-right: 5px;
   }
-  .action-btn.delete {
-    background: #c0392b;
+  #questionsList div:hover {
+    background-color: #f0f4ff;
   }
-  .action-btn:hover {
-    opacity: 0.9;
+  .btn-danger {
+    background: #d43f3a;
   }
-  .hidden {
-    display: none;
+  .btn-danger:hover {
+    background: #b32e29;
   }
-  #bulkUploadSection {
-    margin-top: 20px;
-    border-top: 1px solid #ddd;
-    padding-top: 15px;
+  .flex-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .option-input {
+    flex: 1 1 45%;
+  }
+  .radio-group {
+    margin-bottom: 15px;
+  }
+  .radio-group label {
+    margin-right: 15px;
+  }
+  #bulkUploadInput {
+    margin-top: 10px;
+  }
+  #exportBtn {
+    background: #28a745;
+  }
+  #exportBtn:hover {
+    background: #1e7e34;
+  }
+  #statusMsg {
+    margin-top: 15px;
+    font-weight: 600;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>NEET PG Admin Panel</h1>
-  <button id="logoutBtn" class="hidden">Logout</button>
+  <h1>NEET PG Quiz Admin Panel</h1>
+  <button id="logoutBtn">Logout</button>
 </header>
 
-<!-- Login Section -->
-<div id="loginSection">
-  <h2>Admin Login</h2>
-  <input type="email" id="loginEmail" placeholder="Email" />
-  <input type="password" id="loginPassword" placeholder="Password" />
-  <button id="loginBtn">Login</button>
-  <button id="googleLoginBtn">Login with Google</button>
-  <p id="loginMessage" style="color:red;"></p>
-</div>
+<main>
+  <div id="statusMsg"></div>
 
-<!-- Admin Panel -->
-<div id="adminPanel" class="hidden">
-  <h2>Manage Questions</h2>
+  <section class="section">
+    <h2>Add / Edit Question</h2>
+    <label for="subjectSelect">Subject:</label>
+    <select id="subjectSelect" required>
+      <option value="">-- Select Subject --</option>
+      <optgroup label="1st Year">
+        <option value="Anatomy">Anatomy</option>
+        <option value="Physiology">Physiology</option>
+        <option value="Biochemistry">Biochemistry</option>
+      </optgroup>
+      <optgroup label="2nd Year">
+        <option value="Pathology">Pathology</option>
+        <option value="Pharmacology">Pharmacology</option>
+        <option value="Microbiology">Microbiology</option>
+        <option value="Forensic Medicine">Forensic Medicine</option>
+      </optgroup>
+      <optgroup label="3rd Year">
+        <option value="Community Medicine">Community Medicine</option>
+        <option value="ENT">ENT</option>
+        <option value="Ophthalmology">Ophthalmology</option>
+      </optgroup>
+      <optgroup label="Final Year">
+        <option value="General Medicine">General Medicine</option>
+        <option value="General Surgery">General Surgery</option>
+        <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
+        <option value="Pediatrics">Pediatrics</option>
+        <option value="Orthopaedics">Orthopaedics</option>
+        <option value="Dermatology">Dermatology</option>
+        <option value="Psychiatry">Psychiatry</option>
+        <option value="Respiratory Medicine">Respiratory Medicine</option>
+        <option value="Anesthesiology">Anesthesiology</option>
+      </optgroup>
+    </select>
 
-  <label for="subjectSelect">Select Subject</label>
-  <select id="subjectSelect" required>
-    <option value="">--Select Subject--</option>
-    <optgroup label="1st Year">
-      <option value="anatomy">Anatomy</option>
-      <option value="physiology">Physiology</option>
-      <option value="biochemistry">Biochemistry</option>
-    </optgroup>
-    <optgroup label="2nd Year">
-      <option value="pathology">Pathology</option>
-      <option value="pharmacology">Pharmacology</option>
-      <option value="microbiology">Microbiology</option>
-      <option value="forensic medicine">Forensic Medicine</option>
-    </optgroup>
-    <optgroup label="3rd Year">
-      <option value="community medicine">Community Medicine</option>
-      <option value="ent">ENT</option>
-      <option value="ophthalmology">Ophthalmology</option>
-    </optgroup>
-    <optgroup label="Final Year">
-      <option value="general medicine">General Medicine</option>
-      <option value="general surgery">General Surgery</option>
-      <option value="obstetrics & gynaecology">Obstetrics & Gynaecology</option>
-      <option value="pediatrics">Pediatrics</option>
-      <option value="orthopaedics">Orthopaedics</option>
-      <option value="dermatology">Dermatology</option>
-      <option value="psychiatry">Psychiatry</option>
-      <option value="respiratory medicine">Respiratory Medicine</option>
-      <option value="anesthesiology">Anesthesiology</option>
-    </optgroup>
-  </select>
+    <label for="questionInput">Question:</label>
+    <textarea id="questionInput" placeholder="Enter question text"></textarea>
 
-  <h3>Add / Edit Question</h3>
-  <form id="questionForm">
-    <label>Question Text:</label>
-    <textarea id="questionText" rows="3" required></textarea>
+    <label for="imageUrlInput">Image URL (optional):</label>
+    <input type="text" id="imageUrlInput" placeholder="https://example.com/image.jpg" />
 
-    <label>Image URL (optional):</label>
-    <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" />
+    <div class="flex-row">
+      <div class="option-input">
+        <label for="optionA">Option A:</label>
+        <input type="text" id="optionA" placeholder="Option A" />
+      </div>
+      <div class="option-input">
+        <label for="optionB">Option B:</label>
+        <input type="text" id="optionB" placeholder="Option B" />
+      </div>
+    </div>
+    <div class="flex-row">
+      <div class="option-input">
+        <label for="optionC">Option C:</label>
+        <input type="text" id="optionC" placeholder="Option C" />
+      </div>
+      <div class="option-input">
+        <label for="optionD">Option D:</label>
+        <input type="text" id="optionD" placeholder="Option D" />
+      </div>
+    </div>
 
-    <label>Options (Enter exactly 4 options):</label>
-    <input type="text" id="option0" placeholder="Option 1" required />
-    <input type="text" id="option1" placeholder="Option 2" required />
-    <input type="text" id="option2" placeholder="Option 3" required />
-    <input type="text" id="option3" placeholder="Option 4" required />
+    <div class="radio-group">
+      <label><strong>Correct Option:</strong></label>
+      <label><input type="radio" name="correctOption" value="A" /> A</label>
+      <label><input type="radio" name="correctOption" value="B" /> B</label>
+      <label><input type="radio" name="correctOption" value="C" /> C</label>
+      <label><input type="radio" name="correctOption" value="D" /> D</label>
+    </div>
 
-    <label>Correct Option (0-based index):</label>
-    <input type="number" id="correctOption" min="0" max="3" required />
+    <button id="saveQuestionBtn">Save Question</button>
+  </section>
 
-    <input type="hidden" id="editQuestionId" />
+  <section class="section">
+    <h2>All Questions in Selected Subject</h2>
+    <select id="subjectFilterSelect" style="margin-bottom:12px;">
+      <option value="">-- Select Subject to View --</option>
+      <optgroup label="1st Year">
+        <option value="Anatomy">Anatomy</option>
+        <option value="Physiology">Physiology</option>
+        <option value="Biochemistry">Biochemistry</option>
+      </optgroup>
+      <optgroup label="2nd Year">
+        <option value="Pathology">Pathology</option>
+        <option value="Pharmacology">Pharmacology</option>
+        <option value="Microbiology">Microbiology</option>
+        <option value="Forensic Medicine">Forensic Medicine</option>
+      </optgroup>
+      <optgroup label="3rd Year">
+        <option value="Community Medicine">Community Medicine</option>
+        <option value="ENT">ENT</option>
+        <option value="Ophthalmology">Ophthalmology</option>
+      </optgroup>
+      <optgroup label="Final Year">
+        <option value="General Medicine">General Medicine</option>
+        <option value="General Surgery">General Surgery</option>
+        <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
+        <option value="Pediatrics">Pediatrics</option>
+        <option value="Orthopaedics">Orthopaedics</option>
+        <option value="Dermatology">Dermatology</option>
+        <option value="Psychiatry">Psychiatry</option>
+        <option value="Respiratory Medicine">Respiratory Medicine</option>
+        <option value="Anesthesiology">Anesthesiology</option>
+      </optgroup>
+    </select>
+    <div id="questionsList"></div>
+    <button id="deleteQuestionBtn" class="btn-danger" disabled>Delete Selected Question</button>
+  </section>
 
-    <button type="submit">Save Question</button>
-    <button type="button" id="cancelEditBtn" class="hidden">Cancel Edit</button>
-  </form>
-
-  <h3>All Questions</h3>
-  <table id="questionsTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Question</th>
-        <th>Subject</th>
-        <th>Image</th>
-        <th>Options</th>
-        <th>Correct Option</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="bulkUploadSection">
-    <h3>Bulk Upload Questions (JSON file)</h3>
+  <section class="section">
+    <h2>Bulk Upload Questions (JSON)</h2>
+    <p>Upload a JSON file with questions array. Format example below:</p>
+    <pre style="background:#eee;padding:10px; font-size:0.85rem; max-height:150px; overflow:auto;">
+[
+  {
+    "subject": "Anatomy",
+    "question": "What is the longest bone?",
+    "imageUrl": "",
+    "options": {
+      "A": "Femur",
+      "B": "Tibia",
+      "C": "Fibula",
+      "D": "Humerus"
+    },
+    "correctOption": "A"
+  },
+  ...
+]
+    </pre>
     <input type="file" id="bulkUploadInput" accept=".json" />
-    <button id="bulkUploadBtn">Upload</button>
-    <h3>Export All Questions</h3>
-    <button id="exportBtn">Export as JSON</button>
-  </div>
-</div>
+    <button id="uploadJsonBtn">Upload JSON</button>
+  </section>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-  import {
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  <section class="section">
+    <h2>Export All Questions as JSON</h2>
+    <button id="exportBtn">Download JSON</button>
+  </section>
+</main>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -226,303 +298,270 @@
     measurementId: "G-GEG090K2JQ"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const allowedAdminEmail = "y3knishu@gmail.com";
 
   // Elements
-  const loginSection = document.getElementById('loginSection');
-  const loginEmail = document.getElementById('loginEmail');
-  const loginPassword = document.getElementById('loginPassword');
-  const loginBtn = document.getElementById('loginBtn');
-  const googleLoginBtn = document.getElementById('googleLoginBtn');
-  const loginMessage = document.getElementById('loginMessage');
-
-  const adminPanel = document.getElementById('adminPanel');
   const logoutBtn = document.getElementById('logoutBtn');
-
+  const statusMsg = document.getElementById('statusMsg');
   const subjectSelect = document.getElementById('subjectSelect');
-  const questionForm = document.getElementById('questionForm');
-  const questionText = document.getElementById('questionText');
-  const imageUrl = document.getElementById('imageUrl');
-  const option0 = document.getElementById('option0');
-  const option1 = document.getElementById('option1');
-  const option2 = document.getElementById('option2');
-  const option3 = document.getElementById('option3');
-  const correctOption = document.getElementById('correctOption');
-  const editQuestionId = document.getElementById('editQuestionId');
-  const cancelEditBtn = document.getElementById('cancelEditBtn');
-
-  const questionsTableBody = document.querySelector('#questionsTable tbody');
-
+  const questionInput = document.getElementById('questionInput');
+  const imageUrlInput = document.getElementById('imageUrlInput');
+  const optionA = document.getElementById('optionA');
+  const optionB = document.getElementById('optionB');
+  const optionC = document.getElementById('optionC');
+  const optionD = document.getElementById('optionD');
+  const correctOptionRadios = document.getElementsByName('correctOption');
+  const saveQuestionBtn = document.getElementById('saveQuestionBtn');
+  const subjectFilterSelect = document.getElementById('subjectFilterSelect');
+  const questionsList = document.getElementById('questionsList');
+  const deleteQuestionBtn = document.getElementById('deleteQuestionBtn');
   const bulkUploadInput = document.getElementById('bulkUploadInput');
-  const bulkUploadBtn = document.getElementById('bulkUploadBtn');
+  const uploadJsonBtn = document.getElementById('uploadJsonBtn');
   const exportBtn = document.getElementById('exportBtn');
 
-  // Admin email allowed
-  const ADMIN_EMAIL = 'y3knishu@gmail.com';
+  let currentUser = null;
+  let editingQuestionId = null; // To track if editing or adding
+  let selectedQuestionId = null; // For deletion
 
-  let questionsList = [];
-
-  // --- Authentication ---
-
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      if (user.email !== ADMIN_EMAIL) {
-        loginMessage.textContent = 'Access denied. You are not admin.';
-        signOut(auth);
-        showLogin();
-      } else {
-        showAdminPanel();
-        loadQuestions();
-      }
+  // Admin auth check
+  auth.onAuthStateChanged(user => {
+    if (user && user.email === allowedAdminEmail) {
+      currentUser = user;
+      statusMsg.textContent = `Logged in as admin: ${user.email}`;
+      loadQuestionsForSubject(subjectFilterSelect.value);
     } else {
-      showLogin();
+      alert("Access denied! Admin login required.");
+      window.location.href = "login.html";
     }
   });
 
-  function showLogin() {
-    loginSection.style.display = 'block';
-    adminPanel.style.display = 'none';
-    logoutBtn.classList.add('hidden');
-  }
-  function showAdminPanel() {
-    loginSection.style.display = 'none';
-    adminPanel.style.display = 'block';
-    logoutBtn.classList.remove('hidden');
-  }
+  logoutBtn.addEventListener('click', () => {
+    auth.signOut();
+  });
 
-  loginBtn.onclick = async () => {
-    loginMessage.textContent = '';
-    const email = loginEmail.value.trim();
-    const pass = loginPassword.value.trim();
-    if (!email || !pass) {
-      loginMessage.textContent = 'Email and password required.';
-      return;
-    }
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) {
-      loginMessage.textContent = 'Login failed: ' + e.message;
-    }
-  };
-
-  googleLoginBtn.onclick = async () => {
-    loginMessage.textContent = '';
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      loginMessage.textContent = 'Google login failed: ' + e.message;
-    }
-  };
-
-  logoutBtn.onclick = () => {
-    signOut(auth);
-  };
-
-  // --- Load Questions ---
-
-  async function loadQuestions() {
-    questionsTableBody.innerHTML = '';
-    questionsList = [];
-    try {
-      const querySnapshot = await getDocs(collection(db, 'questions'));
-      querySnapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const id = docSnap.id;
-        questionsList.push({ id, ...data });
-      });
-      renderQuestionsTable();
-    } catch (e) {
-      alert('Error loading questions: ' + e.message);
-    }
-  }
-
-  function renderQuestionsTable() {
-    questionsTableBody.innerHTML = '';
-    questionsList.forEach((q, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td style="max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${q.question}">${q.question}</td>
-        <td>${q.subject}</td>
-        <td>${q.image ? `<a href="${q.image}" target="_blank">View</a>` : '—'}</td>
-        <td><ul style="padding-left: 15px; margin: 0;">
-          ${q.options.map(opt => `<li>${opt}</li>`).join('')}
-        </ul></td>
-        <td>${q.correctOption}</td>
-        <td>
-          <button class="action-btn edit-btn" data-id="${q.id}">Edit</button>
-          <button class="action-btn delete-btn delete" data-id="${q.id}">Delete</button>
-        </td>
-      `;
-      questionsTableBody.appendChild(tr);
-    });
-
-    // Attach edit/delete handlers
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.onclick = () => {
-        const qid = btn.getAttribute('data-id');
-        startEditQuestion(qid);
-      };
-    });
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.onclick = async () => {
-        const qid = btn.getAttribute('data-id');
-        if (confirm('Delete this question?')) {
-          await deleteDoc(doc(db, 'questions', qid));
-          await loadQuestions();
-        }
-      };
-    });
-  }
-
-  // --- Add / Edit Question ---
-
-  questionForm.onsubmit = async (e) => {
-    e.preventDefault();
-
+  // Save or update question
+  saveQuestionBtn.addEventListener('click', async () => {
     const subject = subjectSelect.value;
-    const question = questionText.value.trim();
-    const image = imageUrl.value.trim();
-    const options = [
-      option0.value.trim(),
-      option1.value.trim(),
-      option2.value.trim(),
-      option3.value.trim(),
-    ];
-    const correct = parseInt(correctOption.value);
+    const questionText = questionInput.value.trim();
+    const imgUrl = imageUrlInput.value.trim();
+    const options = {
+      A: optionA.value.trim(),
+      B: optionB.value.trim(),
+      C: optionC.value.trim(),
+      D: optionD.value.trim()
+    };
+    const correctOption = [...correctOptionRadios].find(r => r.checked)?.value;
 
-    if (!subject) {
-      alert('Select subject');
-      return;
-    }
-    if (!question) {
-      alert('Question text required');
-      return;
-    }
-    if (options.some(opt => !opt)) {
-      alert('All 4 options are required');
-      return;
-    }
-    if (isNaN(correct) || correct < 0 || correct > 3) {
-      alert('Correct option must be 0, 1, 2 or 3');
+    if (!subject || !questionText || !options.A || !options.B || !options.C || !options.D || !correctOption) {
+      alert("Please fill all fields and select correct option.");
       return;
     }
 
-    const questionData = { subject, question, image: image || null, options, correctOption: correct };
+    const questionData = {
+      subject,
+      question: questionText,
+      imageUrl: imgUrl,
+      options,
+      correctOption
+    };
 
-    const editId = editQuestionId.value;
-    if (editId) {
-      // Update existing
-      try {
-        await updateDoc(doc(db, 'questions', editId), questionData);
-        alert('Question updated');
-      } catch (e) {
-        alert('Update failed: ' + e.message);
-        return;
+    try {
+      if (editingQuestionId) {
+        // Update existing question
+        await db.collection('questions').doc(editingQuestionId).set(questionData);
+        statusMsg.textContent = "Question updated successfully.";
+      } else {
+        // Add new question
+        await db.collection('questions').add(questionData);
+        statusMsg.textContent = "Question added successfully.";
       }
-    } else {
-      // Add new
-      try {
-        await addDoc(collection(db, 'questions'), questionData);
-        alert('Question added');
-      } catch (e) {
-        alert('Add failed: ' + e.message);
-        return;
-      }
+      clearForm();
+      loadQuestionsForSubject(subjectFilterSelect.value);
+    } catch (error) {
+      alert("Error saving question: " + error.message);
     }
-    resetForm();
-    loadQuestions();
-  };
+  });
 
-  cancelEditBtn.onclick = () => {
-    resetForm();
-  };
-
-  function startEditQuestion(id) {
-    const q = questionsList.find(q => q.id === id);
-    if (!q) return;
-    subjectSelect.value = q.subject;
-    questionText.value = q.question;
-    imageUrl.value = q.image || '';
-    option0.value = q.options[0];
-    option1.value = q.options[1];
-    option2.value = q.options[2];
-    option3.value = q.options[3];
-    correctOption.value = q.correctOption;
-    editQuestionId.value = q.id;
-    cancelEditBtn.classList.remove('hidden');
-    window.scrollTo(0, 0);
+  // Clear form inputs
+  function clearForm() {
+    editingQuestionId = null;
+    subjectSelect.value = "";
+    questionInput.value = "";
+    imageUrlInput.value = "";
+    optionA.value = "";
+    optionB.value = "";
+    optionC.value = "";
+    optionD.value = "";
+    [...correctOptionRadios].forEach(r => r.checked = false);
+    saveQuestionBtn.textContent = "Save Question";
   }
 
-  function resetForm() {
-    questionForm.reset();
-    editQuestionId.value = '';
-    cancelEditBtn.classList.add('hidden');
+  // Load questions list for selected subject
+  subjectFilterSelect.addEventListener('change', () => {
+    loadQuestionsForSubject(subjectFilterSelect.value);
+    clearForm();
+    selectedQuestionId = null;
+    deleteQuestionBtn.disabled = true;
+  });
+
+  async function loadQuestionsForSubject(subject) {
+    questionsList.innerHTML = "";
+    if (!subject) return;
+
+    try {
+      const querySnapshot = await db.collection('questions')
+        .where("subject", "==", subject)
+        .orderBy("question")
+        .get();
+
+      if (querySnapshot.empty) {
+        questionsList.innerHTML = "<p>No questions found for this subject.</p>";
+        return;
+      }
+
+      querySnapshot.forEach(doc => {
+        const q = doc.data();
+        const div = document.createElement('div');
+        div.textContent = q.question.length > 100 ? q.question.slice(0, 100) + "..." : q.question;
+        div.dataset.id = doc.id;
+        div.title = "Click to edit";
+        div.addEventListener('click', () => {
+          selectQuestion(doc.id, q);
+        });
+        questionsList.appendChild(div);
+      });
+    } catch (error) {
+      alert("Error loading questions: " + error.message);
+    }
   }
 
-  // --- Bulk Upload ---
+  // Select question for editing
+  function selectQuestion(id, questionData) {
+    selectedQuestionId = id;
+    editingQuestionId = id;
 
-  bulkUploadBtn.onclick = () => {
+    subjectSelect.value = questionData.subject;
+    questionInput.value = questionData.question;
+    imageUrlInput.value = questionData.imageUrl || "";
+    optionA.value = questionData.options.A;
+    optionB.value = questionData.options.B;
+    optionC.value = questionData.options.C;
+    optionD.value = questionData.options.D;
+
+    [...correctOptionRadios].forEach(r => r.checked = r.value === questionData.correctOption);
+
+    saveQuestionBtn.textContent = "Update Question";
+    deleteQuestionBtn.disabled = false;
+
+    // Highlight selected question visually
+    [...questionsList.children].forEach(child => {
+      child.style.backgroundColor = child.dataset.id === id ? "#d3e0ff" : "";
+    });
+  }
+
+  // Delete selected question
+  deleteQuestionBtn.addEventListener('click', async () => {
+    if (!selectedQuestionId) return;
+    if (!confirm("Are you sure you want to delete the selected question?")) return;
+
+    try {
+      await db.collection('questions').doc(selectedQuestionId).delete();
+      statusMsg.textContent = "Question deleted.";
+      clearForm();
+      loadQuestionsForSubject(subjectFilterSelect.value);
+      selectedQuestionId = null;
+      deleteQuestionBtn.disabled = true;
+    } catch (error) {
+      alert("Error deleting question: " + error.message);
+    }
+  });
+
+  // Bulk upload JSON questions
+  uploadJsonBtn.addEventListener('click', () => {
+    if (!bulkUploadInput.files.length) {
+      alert("Please select a JSON file first.");
+      return;
+    }
+
     const file = bulkUploadInput.files[0];
-    if (!file) {
-      alert('Select a JSON file first');
-      return;
-    }
     const reader = new FileReader();
-    reader.onload = async e => {
+    reader.onload = async (e) => {
       try {
-        const json = JSON.parse(e.target.result);
-        if (!Array.isArray(json)) throw new Error('JSON must be an array');
-        // Validate and add questions
-        for (const q of json) {
-          if (!q.subject || !q.question || !q.options || !Array.isArray(q.options) || q.options.length !== 4 || typeof q.correctOption !== 'number') {
-            alert('Invalid question format in JSON');
-            return;
+        const questionsArray = JSON.parse(e.target.result);
+        if (!Array.isArray(questionsArray)) throw new Error("JSON must be an array.");
+
+        let addedCount =        
+        let addedCount = 0;
+        for (const q of questionsArray) {
+          // Basic validation for each question object
+          if (
+            !q.subject || !q.question || !q.options ||
+            !q.options.A || !q.options.B || !q.options.C || !q.options.D ||
+            !q.correctOption
+          ) {
+            console.warn("Skipping invalid question:", q);
+            continue; // skip invalid question
           }
-          await addDoc(collection(db, 'questions'), {
-            subject: q.subject.toLowerCase(),
+
+          await db.collection('questions').add({
+            subject: q.subject,
             question: q.question,
-            image: q.image || null,
-            options: q.options,
+            imageUrl: q.imageUrl || "",
+            options: {
+              A: q.options.A,
+              B: q.options.B,
+              C: q.options.C,
+              D: q.options.D
+            },
             correctOption: q.correctOption
           });
+          addedCount++;
         }
-        alert('Bulk upload completed');
-        bulkUploadInput.value = '';
-        loadQuestions();
+        statusMsg.textContent = `Bulk upload complete. Added ${addedCount} questions.`;
+        loadQuestionsForSubject(subjectFilterSelect.value);
       } catch (err) {
-        alert('Failed to parse JSON: ' + err.message);
+        alert("Failed to parse or upload JSON: " + err.message);
       }
     };
     reader.readAsText(file);
-  };
+  });
 
-  // --- Export Questions JSON ---
-
-  exportBtn.onclick = async () => {
+  // Export all questions as JSON
+  exportBtn.addEventListener('click', async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'questions'));
+      const allQuestionsSnapshot = await db.collection('questions').get();
       const allQuestions = [];
-      querySnapshot.forEach(docSnap => {
-        allQuestions.push(docSnap.data());
+      allQuestionsSnapshot.forEach(doc => {
+        const data = doc.data();
+        allQuestions.push({
+          subject: data.subject,
+          question: data.question,
+          imageUrl: data.imageUrl || "",
+          options: data.options,
+          correctOption: data.correctOption
+        });
       });
-      const blob = new Blob([JSON.stringify(allQuestions, null, 2)], { type: 'application/json' });
+
+      const dataStr = JSON.stringify(allQuestions, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement('a');
-           a.href = url;
-      a.download = 'neet_pg_questions_export.json';
+      a.href = url;
+      a.download = `neet_pg_questions_export_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
-      a.remove();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('Error exporting questions: ' + err.message);
+      statusMsg.textContent = "Export completed, file downloaded.";
+    } catch (error) {
+      alert("Error exporting questions: " + error.message);
     }
-  };
+  });
 </script>
 
 </body>
