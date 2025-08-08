@@ -3,70 +3,86 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Login / Sign Up - NEET PG Quiz</title>
+<title>NEET PG Quiz - Login</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    display: flex; justify-content: center; align-items: center;
-    height: 100vh; margin: 0; background: #f9f9f9;
+    background: #f0f4ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
   }
-  .auth-box {
-    background: white; padding: 2rem; border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  .login-container {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 320px;
+    text-align: center;
   }
-  h2 { margin-bottom: 1rem; color: #34495e; text-align: center;}
-  input {
-    width: 100%; padding: 0.5rem; margin-bottom: 1rem;
-    border-radius: 4px; border: 1px solid #ccc;
+  h2 {
+    margin-bottom: 20px;
+    color: #344ea3;
+  }
+  input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 10px 0 15px;
+    border: 1.5px solid #344ea3;
+    border-radius: 8px;
     font-size: 1rem;
   }
   button {
-    width: 100%; padding: 0.6rem;
-    background: #2980b9; color: white;
-    border: none; border-radius: 4px;
-    cursor: pointer; font-weight: bold;
-    font-size: 1rem;
+    width: 100%;
+    background-color: #344ea3;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
   }
-  button:hover { background: #3498db; }
-  .google-btn {
-    background: #dd4b39; margin-top: 0.5rem;
+  button:hover {
+    background-color: #2a3a81;
   }
-  p {
-    text-align: center; margin-top: 1rem; font-size: 0.9rem;
+  .separator {
+    margin: 20px 0;
+    font-weight: bold;
+    color: #555;
   }
-  a {
-    color: #2980b9; text-decoration: none; cursor: pointer;
+  #errorMsg {
+    color: red;
+    margin-bottom: 10px;
+    min-height: 18px;
   }
-  #toggleAuth {
-    text-align: center; margin-bottom: 1rem;
+  #googleSignInBtn {
+    background-color: #db4437;
+    margin-top: 10px;
   }
 </style>
 </head>
 <body>
 
-<div class="auth-box">
-  <h2 id="formTitle">Login to NEET PG Quiz</h2>
-
-  <input type="email" id="email" placeholder="Email" required />
-  <input type="password" id="password" placeholder="Password" required />
-
-  <button id="authBtn">Login</button>
-
-  <button id="googleLoginBtn" class="google-btn">Sign in with Google</button>
-
-  <p id="toggleAuth">
-    Don't have an account? <a id="toggleLink">Sign Up</a>
-  </p>
+<div class="login-container">
+  <h2>NEET PG Quiz Login</h2>
+  <div id="errorMsg"></div>
+  
+  <input type="email" id="emailInput" placeholder="Email" required />
+  <input type="password" id="passwordInput" placeholder="Password" required />
+  
+  <button id="loginBtn">Login / Sign Up</button>
+  
+  <div class="separator">OR</div>
+  
+  <button id="googleSignInBtn">Sign in with Google</button>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import {
-    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    signInWithPopup, GoogleAuthProvider, onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -77,86 +93,58 @@
     measurementId: "G-GEG090K2JQ"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const authBtn = document.getElementById('authBtn');
-  const googleLoginBtn = document.getElementById('googleLoginBtn');
-  const toggleLink = document.getElementById('toggleLink');
-  const formTitle = document.getElementById('formTitle');
-  const toggleAuthText = document.getElementById('toggleAuth');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
+  const errorMsg = document.getElementById('errorMsg');
 
-  let isLoginMode = true; // true = login, false = signup
-
-  toggleLink.addEventListener('click', () => {
-    isLoginMode = !isLoginMode;
-    if (isLoginMode) {
-      formTitle.textContent = 'Login to NEET PG Quiz';
-      authBtn.textContent = 'Login';
-      toggleAuthText.innerHTML = `Don't have an account? <a id="toggleLink">Sign Up</a>`;
-    } else {
-      formTitle.textContent = 'Sign Up for NEET PG Quiz';
-      authBtn.textContent = 'Sign Up';
-      toggleAuthText.innerHTML = `Already have an account? <a id="toggleLink">Login</a>`;
-    }
-    // Re-attach toggle listener since innerHTML replaced the link
-    document.getElementById('toggleLink').addEventListener('click', () => {
-      isLoginMode = !isLoginMode;
-      toggleLink.click();
-    });
-  });
-
-  authBtn.addEventListener('click', async () => {
+  loginBtn.addEventListener('click', async () => {
+    errorMsg.textContent = '';
     const email = emailInput.value.trim();
-    const password = passwordInput.value;
+    const password = passwordInput.value.trim();
 
     if (!email || !password) {
-      alert('Please enter email and password.');
-      return;
-    }
-    if (!validateEmail(email)) {
-      alert('Please enter a valid email.');
-      return;
-    }
-    if (password.length < 6) {
-      alert('Password must be at least 6 characters.');
+      errorMsg.textContent = 'Please enter email and password.';
       return;
     }
 
     try {
-      if (isLoginMode) {
-        await signInWithEmailAndPassword(auth, email, password);
-        alert('Login successful!');
+      // Try to sign in first
+      await auth.signInWithEmailAndPassword(email, password);
+      // Success - redirect to homepage
+      window.location.href = 'index.html';
+    } catch (signInError) {
+      if (signInError.code === 'auth/user-not-found') {
+        // User doesn't exist, try to create account
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          window.location.href = 'index.html';
+        } catch (signUpError) {
+          errorMsg.textContent = signUpError.message;
+        }
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert('Sign up successful! You are now logged in.');
+        errorMsg.textContent = signInError.message;
       }
-      window.location.href = 'index.html';
-    } catch (error) {
-      alert(error.message);
     }
   });
 
-  googleLoginBtn.addEventListener('click', async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      alert('Google sign-in successful!');
-      window.location.href = 'index.html';
-    } catch (error) {
-      alert(error.message);
-    }
+  googleSignInBtn.addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(() => {
+        window.location.href = 'index.html';
+      })
+      .catch((error) => {
+        errorMsg.textContent = error.message;
+      });
   });
 
-  function validateEmail(email) {
-    // simple regex
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  // Redirect if already logged in
-  onAuthStateChanged(auth, (user) => {
+  // Redirect to homepage if already logged in
+  auth.onAuthStateChanged(user => {
     if (user) {
       window.location.href = 'index.html';
     }
