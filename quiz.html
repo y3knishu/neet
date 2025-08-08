@@ -3,84 +3,165 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NEET PG Quiz Homepage</title>
+<title>NEET PG Quiz</title>
 <style>
-  body { font-family: Arial, sans-serif; background: linear-gradient(45deg, #ff0057, #ffec00, #00ff6a, #006eff, #ff00e0); min-height: 100vh; margin: 0; }
-  h1 { text-align: center; color: white; padding: 20px; }
-  #subjectsContainer {
-    max-width: 900px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(150px,1fr));
-    gap: 15px;
-    padding: 20px;
-  }
-  .subject-card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-    cursor: pointer;
-    user-select: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease;
-  }
-  .subject-card:hover {
-    transform: scale(1.05);
-  }
-  /* Different colors for year groups */
-  .year-1 { background: #FF6F61; color: white; }
-  .year-2 { background: #6B5B95; color: white; }
-  .year-3 { background: #88B04B; color: white; }
-  .final-year { background: #F7CAC9; color: #333; }
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+  h2 { margin-bottom: 5px; }
+  .option { padding: 10px; margin: 6px 0; border: 1px solid #999; border-radius: 5px; cursor: pointer; }
+  .option.correct { background-color: #4CAF50; color: white; }
+  .option.wrong { background-color: #f44336; color: white; }
+  #navigation { margin-top: 20px; }
+  button { padding: 8px 15px; margin-right: 10px; }
 </style>
 </head>
 <body>
 
-<h1>NEET PG Quiz - Subjects</h1>
-<div id="subjectsContainer"></div>
+<h1 id="quizTitle">Quiz</h1>
+<div id="questionContainer">
+  <h2 id="questionText">Loading...</h2>
+  <div id="optionsContainer"></div>
+</div>
 
+<div id="navigation">
+  <button id="prevBtn" disabled>Previous</button>
+  <button id="nextBtn" disabled>Next</button>
+  <button id="submitBtn" disabled>Submit</button>
+</div>
+
+<div id="result" style="margin-top: 30px; font-weight: bold;"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script>
-// Define subjects with their year groups
-const subjects = [
-  { name: "Anatomy", year: "year-1" },
-  { name: "Physiology", year: "year-1" },
-  { name: "Biochemistry", year: "year-1" },
+// Your firebaseConfig here (replace with your config)
+const firebaseConfig = {
+  apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+  authDomain: "neet-88499.firebaseapp.com",
+  projectId: "neet-88499",
+  storageBucket: "neet-88499.firebasestorage.app",
+  messagingSenderId: "889163298965",
+  appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+  measurementId: "G-GEG090K2JQ"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  { name: "Pathology", year: "year-2" },
-  { name: "Pharmacology", year: "year-2" },
-  { name: "Microbiology", year: "year-2" },
-  { name: "Forensic Medicine", year: "year-2" },
+const urlParams = new URLSearchParams(window.location.search);
+const subject = urlParams.get("subject");
+if (!subject) {
+  alert("Subject not specified!");
+  window.location.href = "index.html";
+}
 
-  { name: "Community Medicine", year: "year-3" },
-  { name: "ENT", year: "year-3" },
-  { name: "Ophthalmology", year: "year-3" },
+document.getElementById("quizTitle").innerText = `Quiz: ${subject}`;
 
-  { name: "General Medicine", year: "final-year" },
-  { name: "General Surgery", year: "final-year" },
-  { name: "Obstetrics & Gynaecology", year: "final-year" },
-  { name: "Pediatrics", year: "final-year" },
-  { name: "Orthopaedics", year: "final-year" },
-  { name: "Dermatology", year: "final-year" },
-  { name: "Psychiatry", year: "final-year" },
-  { name: "Respiratory Medicine", year: "final-year" },
-  { name: "Anesthesiology", year: "final-year" }
-];
+let questions = [];
+let currentIndex = 0;
+let selectedAnswers = []; // store user's selected option index per question
 
-const container = document.getElementById("subjectsContainer");
+const questionText = document.getElementById("questionText");
+const optionsContainer = document.getElementById("optionsContainer");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const submitBtn = document.getElementById("submitBtn");
+const resultDiv = document.getElementById("result");
 
-subjects.forEach(subj => {
-  const card = document.createElement("div");
-  card.className = `subject-card ${subj.year}`;
-  card.textContent = subj.name;
-  card.onclick = () => {
-    // TODO: Add login and payment lock logic here later
-    window.location.href = `quiz.html?subject=${encodeURIComponent(subj.name)}`;
-  };
-  container.appendChild(card);
-});
+// Fetch questions for the subject
+db.collection("questions")
+  .where("subject", "==", subject)
+  .orderBy("questionNumber")
+  .get()
+  .then(snapshot => {
+    if (snapshot.empty) {
+      alert("No questions found for " + subject);
+      window.location.href = "index.html";
+      return;
+    }
+    questions = snapshot.docs.map(doc => doc.data());
+    selectedAnswers = Array(questions.length).fill(null);
+    renderQuestion();
+    updateButtons();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Failed to load questions.");
+  });
+
+// Render current question and options
+function renderQuestion() {
+  const q = questions[currentIndex];
+  questionText.textContent = `${currentIndex + 1}. ${q.question}`;
+  optionsContainer.innerHTML = "";
+
+  q.options.forEach((opt, i) => {
+    const optDiv = document.createElement("div");
+    optDiv.classList.add("option");
+    optDiv.textContent = opt;
+
+    // If question has image URL, show image
+    if (i === 0 && q.imageUrl) {
+      const img = document.createElement("img");
+      img.src = q.imageUrl;
+      img.style.maxWidth = "100%";
+      img.style.marginBottom = "10px";
+      optionsContainer.prepend(img);
+    }
+
+    // If already answered, color green/red accordingly
+    if (selectedAnswers[currentIndex] !== null) {
+      if (i === q.answer) {
+        optDiv.classList.add("correct");
+      }
+      if (i === selectedAnswers[currentIndex] && selectedAnswers[currentIndex] !== q.answer) {
+        optDiv.classList.add("wrong");
+      }
+    } else {
+      optDiv.onclick = () => {
+        selectedAnswers[currentIndex] = i;
+        renderQuestion(); // re-render to update colors
+        updateButtons();
+      };
+    }
+
+    optionsContainer.appendChild(optDiv);
+  });
+}
+
+function updateButtons() {
+  prevBtn.disabled = currentIndex === 0;
+  nextBtn.disabled = currentIndex === questions.length - 1;
+  submitBtn.disabled = selectedAnswers.includes(null);
+}
+
+prevBtn.onclick = () => {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderQuestion();
+    updateButtons();
+    resultDiv.textContent = "";
+  }
+};
+
+nextBtn.onclick = () => {
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    renderQuestion();
+    updateButtons();
+    resultDiv.textContent = "";
+  }
+};
+
+submitBtn.onclick = () => {
+  let correctCount = 0;
+  questions.forEach((q, i) => {
+    if (selectedAnswers[i] === q.answer) correctCount++;
+  });
+  resultDiv.textContent = `You scored ${correctCount} out of ${questions.length}`;
+  // Disable options and navigation after submit
+  submitBtn.disabled = true;
+  nextBtn.disabled = true;
+  prevBtn.disabled = true;
+};
 </script>
 
 </body>
