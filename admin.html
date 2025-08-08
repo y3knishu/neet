@@ -3,166 +3,167 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Panel - NEET PG Quiz</title>
+  <title>Admin Panel - NEET PG MCQs</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       max-width: 900px;
-      margin: auto;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9f9f9;
     }
     h1 {
-      color: #4caf50;
+      text-align: center;
+      color: #0077cc;
+    }
+    #subjectSelect {
+      margin-bottom: 15px;
+      font-size: 16px;
+      padding: 6px;
+    }
+    #questionList div {
+      padding: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      margin-bottom: 6px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    #questionList div:hover {
+      background-color: #e0f0ff;
+    }
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px #ccc;
+      margin-top: 20px;
     }
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
-    input[type=text], select, textarea {
+    input[type=text], textarea, select {
       width: 100%;
       padding: 8px;
-      margin-top: 5px;
+      margin-top: 4px;
       box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+      font-size: 14px;
     }
     textarea {
       resize: vertical;
     }
     button {
       margin-top: 15px;
-      padding: 10px 15px;
+      padding: 10px 20px;
       font-size: 16px;
-      cursor: pointer;
-    }
-    #logoutBtn {
-      display: none;
-      background-color: #f44336;
-      color: white;
       border: none;
-      float: right;
-      margin-top: -40px;
-      margin-bottom: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #0077cc;
+      color: white;
+      transition: background-color 0.3s;
     }
-    #statusMsg {
+    button:hover {
+      background-color: #005fa3;
+    }
+    #message {
       margin-top: 10px;
       font-weight: bold;
-      color: green;
     }
-    #questionList {
-      margin-top: 20px;
-      max-height: 250px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      padding: 10px;
+    #logoutBtn {
+      float: right;
+      background-color: #cc3300;
+      margin-bottom: 20px;
     }
-    #questionList div {
-      border-bottom: 1px solid #eee;
-      padding: 8px 0;
-      cursor: pointer;
+    #bulkUploadSection {
+      margin-top: 30px;
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px #ccc;
     }
-    #questionList div:hover {
-      background-color: #f0f0f0;
-    }
-    .form-section {
-      margin-bottom: 30px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 20px;
+    #exportBtn {
+      background-color: #28a745;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-
-  <h1>NEET PG Quiz Admin Panel</h1>
+  <h1>NEET PG MCQ Admin Panel</h1>
   <button id="logoutBtn">Logout</button>
-  <div id="statusMsg"></div>
 
-  <div class="form-section">
-    <h2>Add / Edit Question</h2>
-    <label for="subjectSelect">Subject</label>
-    <select id="subjectSelect">
-      <option value="">-- Select Subject --</option>
-      <option value="Anatomy">Anatomy</option>
-      <option value="Physiology">Physiology</option>
-      <option value="Biochemistry">Biochemistry</option>
-      <option value="Pathology">Pathology</option>
-      <option value="Pharmacology">Pharmacology</option>
-      <option value="Microbiology">Microbiology</option>
-      <option value="Forensic Medicine">Forensic Medicine</option>
-      <option value="Community Medicine">Community Medicine</option>
-      <option value="ENT">ENT</option>
-      <option value="Ophthalmology">Ophthalmology</option>
-      <option value="General Medicine">General Medicine</option>
-      <option value="General Surgery">General Surgery</option>
-      <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
-      <option value="Pediatrics">Pediatrics</option>
-      <option value="Orthopaedics">Orthopaedics</option>
-      <option value="Dermatology">Dermatology</option>
-      <option value="Psychiatry">Psychiatry</option>
-      <option value="Respiratory Medicine">Respiratory Medicine</option>
-      <option value="Anesthesiology">Anesthesiology</option>
+  <label for="subjectSelect">Select Subject:</label>
+  <select id="subjectSelect">
+    <option value="">-- Choose Subject --</option>
+    <option value="Anatomy">Anatomy</option>
+    <option value="Physiology">Physiology</option>
+    <option value="Biochemistry">Biochemistry</option>
+    <option value="Pathology">Pathology</option>
+    <option value="Pharmacology">Pharmacology</option>
+    <option value="Microbiology">Microbiology</option>
+    <option value="Forensic Medicine">Forensic Medicine</option>
+    <option value="Community Medicine">Community Medicine</option>
+    <option value="ENT">ENT</option>
+    <option value="Ophthalmology">Ophthalmology</option>
+    <option value="General Medicine">General Medicine</option>
+    <option value="General Surgery">General Surgery</option>
+    <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
+    <option value="Pediatrics">Pediatrics</option>
+    <option value="Orthopaedics">Orthopaedics</option>
+    <option value="Dermatology">Dermatology</option>
+    <option value="Psychiatry">Psychiatry</option>
+    <option value="Respiratory Medicine">Respiratory Medicine</option>
+    <option value="Anesthesiology">Anesthesiology</option>
+  </select>
+
+  <div id="questionList">Select a subject to load questions.</div>
+
+  <form id="questionForm">
+    <h2 id="formTitle">Add New Question</h2>
+
+    <label>Question Text:</label>
+    <textarea id="questionText" rows="3" required></textarea>
+
+    <label>Image URL (optional):</label>
+    <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" />
+
+    <label>Option A:</label>
+    <input type="text" id="optionA" required />
+
+    <label>Option B:</label>
+    <input type="text" id="optionB" required />
+
+    <label>Option C:</label>
+    <input type="text" id="optionC" required />
+
+    <label>Option D:</label>
+    <input type="text" id="optionD" required />
+
+    <label>Correct Option:</label>
+    <select id="correctOption" required>
+      <option value="">-- Select Correct Option --</option>
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
     </select>
 
-    <label for="questionInput">Question</label>
-    <textarea id="questionInput" rows="3" placeholder="Enter question text here"></textarea>
+    <button type="submit" id="saveBtn">Save Question</button>
+    <button type="button" id="resetBtn">Reset Form</button>
+    <div id="message"></div>
+  </form>
 
-    <label for="imageUrlInput">Image URL (optional)</label>
-    <input type="text" id="imageUrlInput" placeholder="Paste image URL here" />
-
-    <label>Options</label>
-    <input type="text" id="optionA" placeholder="Option A" />
-    <input type="text" id="optionB" placeholder="Option B" />
-    <input type="text" id="optionC" placeholder="Option C" />
-    <input type="text" id="optionD" placeholder="Option D" />
-
-    <label>Correct Option</label>
-    <label><input type="radio" name="correctOption" value="A" /> A</label>
-    <label><input type="radio" name="correctOption" value="B" /> B</label>
-    <label><input type="radio" name="correctOption" value="C" /> C</label>
-    <label><input type="radio" name="correctOption" value="D" /> D</label>
-
-    <button id="saveQuestionBtn">Save Question</button>
-    <button id="deleteQuestionBtn" disabled>Delete Selected Question</button>
-    <button id="clearFormBtn">Clear Form</button>
-  </div>
-
-  <div class="form-section">
-    <h2>Filter & View Questions</h2>
-    <label for="subjectFilterSelect">Filter by Subject</label>
-    <select id="subjectFilterSelect">
-      <option value="">-- Select Subject --</option>
-      <option value="Anatomy">Anatomy</option>
-      <option value="Physiology">Physiology</option>
-      <option value="Biochemistry">Biochemistry</option>
-      <option value="Pathology">Pathology</option>
-      <option value="Pharmacology">Pharmacology</option>
-      <option value="Microbiology">Microbiology</option>
-      <option value="Forensic Medicine">Forensic Medicine</option>
-      <option value="Community Medicine">Community Medicine</option>
-      <option value="ENT">ENT</option>
-      <option value="Ophthalmology">Ophthalmology</option>
-      <option value="General Medicine">General Medicine</option>
-      <option value="General Surgery">General Surgery</option>
-      <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
-      <option value="Pediatrics">Pediatrics</option>
-      <option value="Orthopaedics">Orthopaedics</option>
-      <option value="Dermatology">Dermatology</option>
-      <option value="Psychiatry">Psychiatry</option>
-      <option value="Respiratory Medicine">Respiratory Medicine</option>
-      <option value="Anesthesiology">Anesthesiology</option>
-    </select>
-
-    <div id="questionList">Select a subject to load questions.</div>
-  </div>
-
-  <div class="form-section">
-    <h2>Bulk Upload Questions (JSON File)</h2>
-    <input type="file" id="bulkUploadInput" accept=".json" />
+  <div id="bulkUploadSection">
+    <h2>Bulk Upload Questions (JSON)</h2>
+    <input type="file" id="jsonFileInput" accept=".json" />
     <button id="uploadJsonBtn">Upload JSON</button>
-  </div>
-
-  <div class="form-section">
-    <h2>Export All Questions</h2>
     <button id="exportBtn">Export Questions as JSON</button>
+    <div id="bulkMessage"></div>
   </div>
 
   <!-- Firebase SDK -->
@@ -171,7 +172,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase config
+    // Your Firebase config here
     const firebaseConfig = {
       apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
       authDomain: "neet-88499.firebaseapp.com",
@@ -181,79 +182,71 @@
       appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
       measurementId: "G-GEG090K2JQ"
     };
-    // Initialize Firebase
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const allowedAdminEmail = "y3knishu@gmail.com";
-
-    const logoutBtn = document.getElementById("logoutBtn");
-    const statusMsg = document.getElementById("statusMsg");
+    const adminEmail = "y3knishu@gmail.com";
 
     const subjectSelect = document.getElementById("subjectSelect");
-    const questionInput = document.getElementById("questionInput");
-    const imageUrlInput = document.getElementById("imageUrlInput");
+    const questionList = document.getElementById("questionList");
+    const questionForm = document.getElementById("questionForm");
+    const message = document.getElementById("message");
+    const bulkMessage = document.getElementById("bulkMessage");
+
+    const questionText = document.getElementById("questionText");
+    const imageUrl = document.getElementById("imageUrl");
     const optionA = document.getElementById("optionA");
     const optionB = document.getElementById("optionB");
     const optionC = document.getElementById("optionC");
     const optionD = document.getElementById("optionD");
-    const correctOptionRadios = document.getElementsByName("correctOption");
+    const correctOption = document.getElementById("correctOption");
+    const formTitle = document.getElementById("formTitle");
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-    const saveQuestionBtn = document.getElementById("saveQuestionBtn");
-    const deleteQuestionBtn = document.getElementById("deleteQuestionBtn");
-    const clearFormBtn = document.getElementById("clearFormBtn");
-
-    const subjectFilterSelect = document.getElementById("subjectFilterSelect");
-    const questionList = document.getElementById("questionList");
-
-    const bulkUploadInput = document.getElementById("bulkUploadInput");
-    const uploadJsonBtn = document.getElementById("uploadJsonBtn");
-
-    const exportBtn = document.getElementById("exportBtn");
-
-    let currentUser = null;
     let editingQuestionId = null;
 
-    // Auth state observer
+    // Check auth state and restrict access
     auth.onAuthStateChanged(user => {
-      if (user) {
-        if (user.email === allowedAdminEmail) {
-          currentUser = user;
-          statusMsg.textContent = `Logged in as admin: ${user.email}`;
-          logoutBtn.style.display = "inline-block";
-          loadQuestionsForSubject(subjectFilterSelect.value);
-        } else {
-          alert("Access denied! You are not the admin.");
-          auth.signOut();
-          window.location.href = "login.html";
-        }
-      } else {
-        logoutBtn.style.display = "none";
+      if (!user) {
+        alert("Please login as admin to access this page.");
+        window.location.href = "login.html"; // Change to your login page
+        return;
+      }
+      if (user.email !== adminEmail) {
+        alert("Access denied. Admin only.");
+        auth.signOut();
         window.location.href = "login.html";
+        return;
+      }
+      // Admin logged in - load questions if subject selected
+      if(subjectSelect.value) {
+        loadQuestionsForSubject(subjectSelect.value);
+      } else {
+        questionList.innerHTML = "Select a subject to load questions.";
       }
     });
 
-    logoutBtn.addEventListener("click", () => {
+    // Logout button
+    logoutBtn.onclick = () => {
       auth.signOut();
-    });
+    };
 
-    // Load questions for selected subject
-    subjectFilterSelect.addEventListener("change", () => {
-      loadQuestionsForSubject(subjectFilterSelect.value);
-      clearForm();
-    });
-
+    // Load questions for selected subject (Option C: client-side sorting)
     async function loadQuestionsForSubject(subject) {
       questionList.innerHTML = "Loading questions...";
       if (!subject) {
         questionList.innerHTML = "Select a subject to load questions.";
         return;
       }
+
       try {
+        // Query Firestore WITHOUT orderBy to avoid composite index error
         const snapshot = await db.collection("questions")
           .where("subject", "==", subject)
-          .orderBy("question")
           .get();
 
         if (snapshot.empty) {
@@ -261,15 +254,23 @@
           return;
         }
 
-        questionList.innerHTML = "";
+        const questions = [];
         snapshot.forEach(doc => {
-          const data = doc.data();
+          questions.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort questions client-side by question text
+        questions.sort((a, b) => a.question.localeCompare(b.question));
+
+        questionList.innerHTML = "";
+
+        questions.forEach(data => {
           const div = document.createElement("div");
           div.textContent = data.question;
-          div.dataset.id = doc.id;
+          div.dataset.id = data.id;
           div.style.cursor = "pointer";
           div.addEventListener("click", () => {
-            populateFormForEdit(doc.id, data);
+            populateFormForEdit(data.id, data);
           });
           questionList.appendChild(div);
         });
@@ -278,177 +279,167 @@
       }
     }
 
+    // When subject changes, load questions
+    subjectSelect.addEventListener("change", () => {
+      editingQuestionId = null;
+      resetForm();
+      loadQuestionsForSubject(subjectSelect.value);
+    });
+
+    // Fill form for editing
     function populateFormForEdit(id, data) {
       editingQuestionId = id;
-      subjectSelect.value = data.subject;
-      questionInput.value = data.question;
-      imageUrlInput.value = data.imageUrl || "";
-      optionA.value = data.options.A || "";
-      optionB.value = data.options.B || "";
-      optionC.value = data.options.C || "";
-      optionD.value = data.options.D || "";
-      for (const radio of correctOptionRadios) {
-        radio.checked = (radio.value === data.correctOption);
-      }
-      deleteQuestionBtn.disabled = false;
-      saveQuestionBtn.textContent = "Update Question";
+      formTitle.textContent = "Edit Question";
+      questionText.value = data.question || "";
+      imageUrl.value = data.imageUrl || "";
+      optionA.value = data.options?.A || "";
+      optionB.value = data.options?.B || "";
+      optionC.value = data.options?.C || "";
+      optionD.value = data.options?.D || "";
+      correctOption.value = data.correctOption || "";
+      message.textContent = "";
+      saveBtn.textContent = "Update Question";
     }
 
-    function clearForm() {
+    // Reset form to add new question
+    function resetForm() {
       editingQuestionId = null;
-      subjectSelect.value = "";
-      questionInput.value = "";
-      imageUrlInput.value = "";
-      optionA.value = "";
-      optionB.value = "";
-      optionC.value = "";
-      optionD.value = "";
-      for (const radio of correctOptionRadios) {
-        radio.checked = false;
-      }
-      deleteQuestionBtn.disabled = true;
-      saveQuestionBtn.textContent = "Save Question";
-      statusMsg.textContent = "";
+      formTitle.textContent = "Add New Question";
+      questionForm.reset();
+      message.textContent = "";
+      saveBtn.textContent = "Save Question";
     }
+    resetBtn.addEventListener("click", e => {
+      e.preventDefault();
+      resetForm();
+    });
 
-    saveQuestionBtn.addEventListener("click", async () => {
+    // Save new or update existing question
+    questionForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      message.textContent = "";
+
       const subject = subjectSelect.value;
-      const questionText = questionInput.value.trim();
-      const imgUrl = imageUrlInput.value.trim();
-      const options = {
-        A: optionA.value.trim(),
-        B: optionB.value.trim(),
-        C: optionC.value.trim(),
-        D: optionD.value.trim()
-      };
-      const correctOption = [...correctOptionRadios].find(r => r.checked)?.value;
+      if (!subject) {
+        message.textContent = "Please select a subject.";
+        return;
+      }
 
-      if (!subject || !questionText || !options.A || !options.B || !options.C || !options.D || !correctOption) {
-        alert("Please fill all fields and select correct option.");
+      // Validate inputs
+      if (
+        !questionText.value.trim() ||
+        !optionA.value.trim() ||
+        !optionB.value.trim() ||
+        !optionC.value.trim() ||
+        !optionD.value.trim() ||
+        !correctOption.value
+      ) {
+        message.textContent = "Please fill all required fields.";
         return;
       }
 
       const questionData = {
         subject,
-        question: questionText,
-        imageUrl: imgUrl,
-        options,
-        correctOption
+        question: questionText.value.trim(),
+        imageUrl: imageUrl.value.trim() || "",
+        options: {
+          A: optionA.value.trim(),
+          B: optionB.value.trim(),
+          C: optionC.value.trim(),
+          D: optionD.value.trim(),
+        },
+        correctOption: correctOption.value,
       };
 
       try {
         if (editingQuestionId) {
-          await db.collection("questions").doc(editingQuestionId).set(questionData);
-          statusMsg.textContent = "Question updated successfully.";
+          // Update existing
+          await db.collection("questions").doc(editingQuestionId).update(questionData);
+          message.style.color = "green";
+          message.textContent = "Question updated successfully.";
         } else {
+          // Add new
           await db.collection("questions").add(questionData);
-          statusMsg.textContent = "Question added successfully.";
+          message.style.color = "green";
+          message.textContent = "Question added successfully.";
         }
-        clearForm();
-        loadQuestionsForSubject(subjectFilterSelect.value);
+        resetForm();
+        loadQuestionsForSubject(subject);
       } catch (error) {
-        alert("Error saving question: " + error.message);
+        message.style.color = "red";
+        message.textContent = "Error saving question: " + error.message;
       }
     });
 
-    deleteQuestionBtn.addEventListener("click", async () => {
-      if (!editingQuestionId) return;
-      if (!confirm("Are you sure you want to delete this question?")) return;
+    // Bulk upload JSON file
+    const jsonFileInput = document.getElementById("jsonFileInput");
+    const uploadJsonBtn = document.getElementById("uploadJsonBtn");
+    const exportBtn = document.getElementById("exportBtn");
 
-      try {
-        await db.collection("questions").doc(editingQuestionId).delete();
-        statusMsg.textContent = "Question deleted successfully.";
-        clearForm();
-        loadQuestionsForSubject(subjectFilterSelect.value);
-      } catch (error) {
-        alert("Error deleting question: " + error.message);
-      }
-    });
-
-    clearFormBtn.addEventListener("click", () => {
-      clearForm();
-    });
-
-    uploadJsonBtn.addEventListener("click", () => {
-      if (!bulkUploadInput.files.length) {
-        alert("Please select a JSON file first.");
+    uploadJsonBtn.addEventListener("click", async () => {
+      bulkMessage.textContent = "";
+      if (!jsonFileInput.files.length) {
+        bulkMessage.style.color = "red";
+        bulkMessage.textContent = "Please select a JSON file to upload.";
         return;
       }
-
-      const file = bulkUploadInput.files[0];
+      const file = jsonFileInput.files[0];
       const reader = new FileReader();
-
-      reader.onload = async (e) => {
+      reader.onload = async event => {
         try {
-          const questionsArray = JSON.parse(e.target.result);
-          if (!Array.isArray(questionsArray)) throw new Error("JSON must be an array.");
+          const jsonData = JSON.parse(event.target.result);
+          if (!Array.isArray(jsonData)) throw new Error("JSON must be an array of questions.");
 
           let addedCount = 0;
-          for (const q of questionsArray) {
-            if (
-              !q.subject || !q.question || !q.options ||
-              !q.options.A || !q.options.B || !q.options.C || !q.options.D ||
-              !q.correctOption
-            ) {
-              console.warn("Skipping invalid question:", q);
-              continue;
-            }
+          for (const q of jsonData) {
+            // Basic validation for required fields
+            if (!q.subject || !q.question || !q.options || !q.correctOption) continue;
 
-            await db.collection("questions").add({
-              subject: q.subject,
-              question: q.question,
-              imageUrl: q.imageUrl || "",
-              options: {
-                A: q.options.A,
-                B: q.options.B,
-                C: q.options.C,
-                D: q.options.D
-              },
-              correctOption: q.correctOption
-            });
+            await db.collection("questions").add(q);
             addedCount++;
           }
 
-          statusMsg.textContent = `Bulk upload complete. Added ${addedCount} questions.`;
-          loadQuestionsForSubject(subjectFilterSelect.value);
-
+          bulkMessage.style.color = "green";
+          bulkMessage.textContent = `${addedCount} questions uploaded successfully.`;
+          if(subjectSelect.value) loadQuestionsForSubject(subjectSelect.value);
         } catch (err) {
-          alert("Failed to parse or upload JSON: " + err.message);
+          bulkMessage.style.color = "red";
+          bulkMessage.textContent = "Error uploading JSON: " + err.message;
         }
       };
-
       reader.readAsText(file);
     });
 
+    // Export questions as JSON file
     exportBtn.addEventListener("click", async () => {
+      const subject = subjectSelect.value;
+      if (!subject) {
+        bulkMessage.style.color = "red";
+        bulkMessage.textContent = "Please select a subject to export.";
+        return;
+      }
+
       try {
-        const snapshot = await db.collection("questions").get();
-        const allQuestions = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          allQuestions.push({
-            subject: data.subject,
-            question: data.question,
-            imageUrl: data.imageUrl || "",
-            options: data.options,
-            correctOption: data.correctOption
-          });
-        });
+        const snapshot = await db.collection("questions")
+          .where("subject", "==", subject)
+          .get();
 
-        const dataStr = JSON.stringify(allQuestions, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        const questions = [];
+        snapshot.forEach(doc => questions.push(doc.data()));
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `neet_pg_questions_export_${Date.now()}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        statusMsg.textContent = "Export completed, file downloaded.";
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+        const dlAnchor = document.createElement("a");
+        dlAnchor.setAttribute("href", dataStr);
+        dlAnchor.setAttribute("download", `${subject}_questions.json`);
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
+
+        bulkMessage.style.color = "green";
+        bulkMessage.textContent = `Exported ${questions.length} questions for ${subject}.`;
       } catch (error) {
-        alert("Error exporting questions: " + error.message);
+        bulkMessage.style.color = "red";
+        bulkMessage.textContent = "Error exporting questions: " + error.message;
       }
     });
   </script>
