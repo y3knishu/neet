@@ -50,6 +50,15 @@
     font-size: 0.9rem;
   }
   #errorMsg { color: red; margin-top: 10px; }
+  #logoutBtn {
+    float: right;
+    background: #c0392b;
+  }
+  #googleSignInBtn {
+    background-color: #db4437;
+    margin-top: 10px;
+    width: 100%;
+  }
 </style>
 </head>
 <body>
@@ -63,11 +72,15 @@
   <label for="adminPasswordInput">Password:</label>
   <input type="password" id="adminPasswordInput" placeholder="Enter password" required />
   <button id="adminLoginBtn">Login</button>
+
+  <div style="text-align:center; margin:15px 0; font-weight:bold; color:#555;">OR</div>
+  <button id="googleSignInBtn">Sign in with Google</button>
+
   <div id="errorMsg"></div>
 </div>
 
 <div id="adminPanel" style="display:none;">
-  <button id="logoutBtn" style="float:right; background:#c0392b;">Logout</button>
+  <button id="logoutBtn">Logout</button>
 
   <form id="questionForm">
     <label for="subjectSelect">Select Subject:</label>
@@ -157,8 +170,8 @@
   const auth = firebase.auth();
 
   const adminEmail = 'y3knishu@gmail.com';
-  const adminPassword = 'xrnb21r72W@';
 
+  // UI elements
   const loginContainer = document.getElementById('loginContainer');
   const adminPanel = document.getElementById('adminPanel');
   const errorMsg = document.getElementById('errorMsg');
@@ -166,11 +179,12 @@
   const adminEmailInput = document.getElementById('adminEmailInput');
   const adminPasswordInput = document.getElementById('adminPasswordInput');
   const adminLoginBtn = document.getElementById('adminLoginBtn');
-
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
   const logoutBtn = document.getElementById('logoutBtn');
 
   let editDocId = null;
 
+  // Email/password login handler
   adminLoginBtn.addEventListener('click', async () => {
     errorMsg.textContent = '';
     const email = adminEmailInput.value.trim();
@@ -187,55 +201,74 @@
 
     try {
       await auth.signInWithEmailAndPassword(email, password);
-      showAdminPanel();
+      // onAuthStateChanged will handle UI
     } catch (err) {
       if (err.code === 'auth/user-not-found') {
-        // Optionally create user on first login
+        // create admin user if not exists
         try {
           await auth.createUserWithEmailAndPassword(email, password);
-          showAdminPanel();
         } catch (signupErr) {
           errorMsg.textContent = signupErr.message;
+          return;
         }
       } else {
         errorMsg.textContent = err.message;
+        return;
       }
     }
   });
 
+  // Google Sign-In handler
+  googleSignInBtn.addEventListener('click', () => {
+    errorMsg.textContent = '';
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then((result) => {
+        if (result.user.email !== adminEmail) {
+          errorMsg.textContent = 'Access denied: Not admin.';
+          auth.signOut();
+        }
+        // else onAuthStateChanged will handle UI
+      })
+      .catch((error) => {
+        errorMsg.textContent = error.message;
+      });
+  });
+
+  // Logout handler
   logoutBtn.addEventListener('click', async () => {
     await auth.signOut();
     resetToLogin();
   });
 
+  // Show admin panel UI
   function showAdminPanel() {
     loginContainer.style.display = 'none';
     adminPanel.style.display = 'block';
     loadQuestions();
   }
 
+  // Reset UI to login form
   function resetToLogin() {
     adminEmailInput.value = '';
     adminPasswordInput.value = '';
     errorMsg.textContent = '';
     loginContainer.style.display = 'block';
     adminPanel.style.display = 'none';
+    editDocId = null;
   }
 
+  // Firebase auth state listener
   auth.onAuthStateChanged(user => {
-    if (user) {
-      if (user.email === adminEmail) {
-        showAdminPanel();
-      } else {
-        resetToLogin();
-        auth.signOut();
-      }
+    if (user && user.email === adminEmail) {
+      showAdminPanel();
     } else {
       resetToLogin();
+      if (user) auth.signOut();
     }
   });
 
-  // Question form and CRUD logic
+  // --- Question Form & CRUD ---
 
   const questionForm = document.getElementById('questionForm');
   const subjectSelect = document.getElementById('subjectSelect');
@@ -380,14 +413,12 @@
   async function loadQuestions() {
     questionsList.textContent = 'Loading questions...';
     try {
-      // Fetch all questions (no orderBy to avoid index error)
       const snapshot = await db.collection('questions').get();
       if (snapshot.empty) {
         questionsList.textContent = 'No questions found.';
         return;
       }
-      // Map to array and sort client-side by subject then question
-      const questionsArray = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let questionsArray = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       questionsArray.sort((a, b) => {
         if (a.subject < b.subject) return -1;
         if (a.subject > b.subject) return 1;
@@ -409,7 +440,6 @@
         </div>`;
       });
       questionsList.innerHTML = html;
-
     } catch (error) {
       questionsList.textContent = 'Error loading questions: ' + error.message;
     }
