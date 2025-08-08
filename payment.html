@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NEET PG Quiz - Payment</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f4ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0 20px;
+  }
+  .payment-container {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  h2 {
+    color: #344ea3;
+    margin-bottom: 20px;
+  }
+  p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+  }
+  button {
+    background-color: #f97316;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+  }
+  button:hover {
+    background-color: #d8620c;
+  }
+  #message {
+    margin-top: 20px;
+    font-weight: 600;
+    color: green;
+    min-height: 22px;
+  }
+  #loginLink {
+    margin-top: 15px;
+    display: block;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="payment-container">
+  <h2>Unlock All Subjects</h2>
+  <p>Pay ₹99 to unlock all NEET PG subjects except Anatomy (which is free).</p>
+  <button id="payBtn">Pay ₹99</button>
+  <div id="message"></div>
+  <a href="login.html" id="loginLink" style="display:none;">Please login to pay</a>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+    authDomain: "neet-88499.firebaseapp.com",
+    projectId: "neet-88499",
+    storageBucket: "neet-88499.firebasestorage.app",
+    messagingSenderId: "889163298965",
+    appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+    measurementId: "G-GEG090K2JQ"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const payBtn = document.getElementById('payBtn');
+  const messageDiv = document.getElementById('message');
+  const loginLink = document.getElementById('loginLink');
+
+  let currentUser = null;
+
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+      payBtn.disabled = false;
+      loginLink.style.display = 'none';
+      messageDiv.textContent = '';
+    } else {
+      payBtn.disabled = true;
+      loginLink.style.display = 'block';
+      messageDiv.textContent = 'You need to login to make a payment.';
+    }
+  });
+
+  payBtn.addEventListener('click', () => {
+    if (!currentUser) {
+      alert('Please login first to make payment.');
+      return;
+    }
+
+    const options = {
+      key: "rzp_live_7nZptAUoDrsfRb", // Razorpay live key
+      amount: 9900, // Amount in paise
+      currency: "INR",
+      name: "NEET PG Quiz",
+      description: "Unlock all subjects except Anatomy",
+      handler: async function (response) {
+        try {
+          await db.collection('users').doc(currentUser.uid).set({
+            isPaid: true,
+            paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+            razorpayPaymentId: response.razorpay_payment_id
+          }, { merge: true });
+
+          messageDiv.style.color = 'green';
+          messageDiv.textContent = "Payment successful! You can now access all subjects.";
+          payBtn.disabled = true;
+
+          // Optional: Redirect back to homepage after 3 seconds
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 3000);
+
+        } catch (error) {
+          messageDiv.style.color = 'red';
+          messageDiv.textContent = "Payment succeeded but failed to update status. Contact support.";
+          console.error('Error updating payment status:', error);
+        }
+      },
+      prefill: {
+        email: currentUser.email
+      },
+      theme: {
+        color: "#344ea3"
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  });
+</script>
+
+</body>
+</html>
