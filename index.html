@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NEET PG Quiz - Home</title>
+<title>NEET PG Quiz - Home & Login</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
   }
   #subjectContainer {
     max-width: 900px;
-    margin: auto;
+    margin: 20px auto;
   }
   h2 {
     margin-top: 30px;
@@ -39,6 +39,10 @@
     cursor: pointer;
     user-select: none;
     transition: transform 0.2s ease;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-align: center;
+    line-height: 1.3;
   }
   .subject-card:hover {
     transform: scale(1.05);
@@ -46,26 +50,13 @@
   .lock-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.5);
     border-radius: 12px;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-  }
-  .lock-overlay button {
-    margin-top: 10px;
-    background: #f44336;
-    border: none;
-    color: white;
-    padding: 8px 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-  .lock-overlay button:hover {
-    background: #d32f2f;
+    font-size: 48px;
+    pointer-events: none;
   }
   #logoutBtn {
     position: fixed;
@@ -78,16 +69,110 @@
     cursor: pointer;
     font-weight: bold;
     display: none;
+    z-index: 1000;
+  }
+  #paymentSection {
+    position: fixed;
+    top: 70px; /* below logout/login */
+    right: 20px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1000;
+    font-weight: bold;
+    color: #344ea3;
+    text-align: center;
+    min-width: 140px;
+  }
+  #paymentBtn {
+    background: #344ea3;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 8px;
+    width: 100%;
+    font-weight: bold;
+  }
+  #paymentBtn:hover {
+    background: #2a3a81;
+  }
+  #loginContainer {
+    max-width: 400px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  #loginContainer h2 {
+    margin-bottom: 20px;
+    color: #344ea3;
+    text-align: center;
+  }
+  #loginContainer input {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 10px 0 15px;
+    border: 1.5px solid #344ea3;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  #loginContainer button {
+    width: 100%;
+    background-color: #344ea3;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  #loginContainer button:hover {
+    background-color: #2a3a81;
+  }
+  #loginContainer .separator {
+    margin: 20px 0;
+    font-weight: bold;
+    color: #555;
+    text-align: center;
+  }
+  #errorMsg {
+    color: red;
+    min-height: 20px;
+    text-align: center;
   }
 </style>
 </head>
 <body>
 
-<h1>NEET PG Quiz Subjects</h1>
+<h1>NEET PG Quiz</h1>
 
-<div id="subjectContainer"></div>
+<div id="loginContainer">
+  <h2>Login / Sign Up</h2>
+  <div id="errorMsg"></div>
+  <input type="email" id="emailInput" placeholder="Email" required />
+  <input type="password" id="passwordInput" placeholder="Password" required />
+  <button id="loginBtn">Login / Sign Up</button>
+
+  <div class="separator">OR</div>
+
+  <button id="googleSignInBtn">Sign in with Google</button>
+</div>
+
+<div id="subjectContainer" style="display:none;"></div>
 
 <button id="logoutBtn">Logout</button>
+
+<div id="paymentSection">
+  <div id="paymentStatus"></div>
+  <button id="paymentBtn">Pay ₹99 to Unlock All Subjects</button>
+</div>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
@@ -96,7 +181,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
     authDomain: "neet-88499.firebaseapp.com",
@@ -112,6 +196,8 @@
   const db = firebase.firestore();
 
   const razorpayKey = "rzp_live_7nZptAUoDrsfRb";
+
+  const superAdminEmail = "y3knishu@gmail.com";
 
   const subjects = [
     { name: "Anatomy", year: "1st Year", color: "#f44336" },
@@ -135,9 +221,21 @@
     { name: "Anesthesiology", year: "Final Year", color: "#607d8b" }
   ];
 
+  // DOM elements
+  const loginContainer = document.getElementById("loginContainer");
   const subjectContainer = document.getElementById("subjectContainer");
   const logoutBtn = document.getElementById("logoutBtn");
+  const errorMsg = document.getElementById("errorMsg");
+  const paymentSection = document.getElementById("paymentSection");
+  const paymentStatus = document.getElementById("paymentStatus");
+  const paymentBtn = document.getElementById("paymentBtn");
 
+  const emailInput = document.getElementById("emailInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const loginBtn = document.getElementById("loginBtn");
+  const googleSignInBtn = document.getElementById("googleSignInBtn");
+
+  // Render subjects with payment and super admin logic
   function createSubjectCard(subject, unlocked) {
     const card = document.createElement("div");
     card.className = "subject-card";
@@ -149,14 +247,7 @@
       card.style.cursor = "default";
       const overlay = document.createElement("div");
       overlay.className = "lock-overlay";
-      overlay.innerHTML = `
-        <div style="font-size: 36px;">🔒</div>
-        <button>Pay ₹99 to Unlock</button>
-      `;
-      overlay.querySelector("button").onclick = (e) => {
-        e.stopPropagation();
-        openRazorpayCheckout();
-      };
+      overlay.innerHTML = "🔒";
       card.appendChild(overlay);
     } else {
       card.onclick = () => {
@@ -167,7 +258,7 @@
     return card;
   }
 
-  function renderSubjects(isPaid) {
+  function renderSubjects(isPaid, userEmail) {
     subjectContainer.innerHTML = "";
     const years = [...new Set(subjects.map(s => s.year))];
 
@@ -179,7 +270,7 @@
       const yearSubjects = subjects.filter(s => s.year === year);
 
       yearSubjects.forEach(subject => {
-        const unlocked = (subject.name === "Anatomy") || isPaid;
+        const unlocked = (subject.name === "Anatomy") || isPaid || (userEmail === superAdminEmail);
         const card = createSubjectCard(subject, unlocked);
         subjectContainer.appendChild(card);
       });
@@ -203,7 +294,7 @@
         alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
         db.collection('users').doc(user.uid).set({ isPaid: true }, { merge: true })
           .then(() => {
-            renderSubjects(true);
+            updateUIAfterLogin(user);
           })
           .catch(err => alert("Failed to update payment status: " + err.message));
       },
@@ -214,22 +305,83 @@
     rzp.open();
   }
 
+  paymentBtn.onclick = openRazorpayCheckout;
+
   logoutBtn.onclick = () => {
     auth.signOut();
   };
 
+  loginBtn.onclick = async () => {
+    errorMsg.textContent = '';
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) {
+      errorMsg.textContent = 'Please enter email and password.';
+      return;
+    }
+
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch (signInError) {
+      if (signInError.code === 'auth/user-not-found') {
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+        } catch (signUpError) {
+          errorMsg.textContent = signUpError.message;
+        }
+      } else {
+        errorMsg.textContent = signInError.message;
+      }
+    }
+  };
+
+  googleSignInBtn.onclick = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(error => {
+      errorMsg.textContent = error.message;
+    });
+  };
+
+  function updateUIAfterLogin(user) {
+    loginContainer.style.display = "none";
+    logoutBtn.style.display = "block";
+    subjectContainer.style.display = "block";
+
+    if (user.email === superAdminEmail) {
+      paymentSection.style.display = "none";
+      renderSubjects(true, user.email);
+    } else {
+      db.collection('users').doc(user.uid).get().then(doc => {
+        const isPaid = doc.exists && doc.data().isPaid;
+        if (isPaid) {
+          paymentStatus.textContent = "Status: Paid ✅";
+          paymentBtn.style.display = "none";
+        } else {
+          paymentStatus.textContent = "Status: Not Paid ❌";
+          paymentBtn.style.display = "block";
+        }
+        paymentSection.style.display = "block";
+        renderSubjects(isPaid, user.email);
+      }).catch(() => {
+        paymentStatus.textContent = "Status: Unknown";
+        paymentBtn.style.display = "block";
+        paymentSection.style.display = "block";
+        renderSubjects(false, user.email);
+      });
+    }
+    errorMsg.textContent = '';
+  }
+
   auth.onAuthStateChanged(user => {
     if (user) {
-      logoutBtn.style.display = "block";
-      db.collection('users').doc(user.uid).get()
-        .then(doc => {
-          const isPaid = doc.exists && doc.data().isPaid;
-          renderSubjects(isPaid);
-        })
-        .catch(() => renderSubjects(false));
+      updateUIAfterLogin(user);
     } else {
+      loginContainer.style.display = "block";
       logoutBtn.style.display = "none";
-      renderSubjects(false);
+      paymentSection.style.display = "none";
+      subjectContainer.style.display = "none";
+      errorMsg.textContent = '';
     }
   });
 </script>
