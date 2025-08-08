@@ -1,12 +1,12 @@
 // Firebase initialization
 const firebaseConfig = {
-  apiKey: "AIzaSyDohygxGWFCQ-Kn2yROr_cviSUcD0drt0M",
-  authDomain: "nishant-website.firebaseapp.com",
-  projectId: "nishant-website",
-  storageBucket: "nishant-website.firebasestorage.app",
-  messagingSenderId: "92337870765",
-  appId: "1:92337870765:web:664418f551133e356fb324",
-  measurementId: "G-08FZCL9GVS"
+  apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+  authDomain: "neet-88499.firebaseapp.com",
+  projectId: "neet-88499",
+  storageBucket: "neet-88499.firebasestorage.app",
+  messagingSenderId: "889163298965",
+  appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+  measurementId: "G-GEG090K2JQ"
 };
 
 firebase.initializeApp(firebaseConfig);
