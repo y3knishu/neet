@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NEET PG Quiz - Home</title>
+<style>
+  body {
+    font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fff;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  header {
+    background: #34495e; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center;
+  }
+  #logoutBtn {
+    background: #e74c3c; border: none; color: white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;
+  }
+  main {
+    flex: 1; padding: 1rem; max-width: 900px; margin: auto;
+  }
+  h1 {
+    text-align: center; margin-bottom: 1rem; color: #34495e;
+  }
+  .year-section {
+    margin-bottom: 2rem;
+  }
+  .year-title {
+    font-weight: bold; font-size: 1.3rem; margin-bottom: 0.5rem; color: #2c3e50;
+  }
+  .subjects-grid {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+  }
+  .subject-card {
+    flex: 1 1 calc(33% - 1rem);
+    background: #eee;
+    border-radius: 10px;
+    padding: 1rem;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgb(0 0 0 / 0.1);
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-width: 180px;
+    position: relative;
+  }
+  .subject-card.locked::after {
+    content: "🔒";
+    position: absolute;
+    top: 10px; right: 10px;
+    font-size: 1.5rem;
+  }
+  .subject-name {
+    font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;
+  }
+  .progress-bar {
+    background: #bdc3c7; border-radius: 6px; height: 12px; overflow: hidden; margin-top: 0.5rem;
+  }
+  .progress-correct {
+    background: #2ecc71; height: 12px; width: 0;
+  }
+  .progress-wrong {
+    background: #e74c3c; height: 12px; width: 0;
+  }
+  .progress-unattempted {
+    background: #95a5a6; height: 12px; width: 0;
+  }
+  .subject-score {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+  }
+  #razorpayBtn {
+    margin: 2rem auto 1rem;
+    display: block;
+    background: #f37254;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    font-weight: bold;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    max-width: 200px;
+  }
+  #razorpayBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  /* Rainbow colors for subjects */
+  .color-0 { background: #e74c3c; }
+  .color-1 { background: #8e44ad; }
+  .color-2 { background: #3498db; }
+  .color-3 { background: #16a085; }
+  .color-4 { background: #f39c12; }
+  .color-5 { background: #d35400; }
+  .color-6 { background: #27ae60; }
+  .color-7 { background: #2980b9; }
+  .color-8 { background: #2c3e50; }
+  .color-9 { background: #c0392b; }
+  .color-10 { background: #9b59b6; }
+  .color-11 { background: #34495e; }
+  .color-12 { background: #e67e22; }
+  .color-13 { background: #1abc9c; }
+  .color-14 { background: #2ecc71; }
+  .color-15 { background: #3498db; }
+  .color-16 { background: #8e44ad; }
+  .color-17 { background: #f39c12; }
+  .color-18 { background: #d35400; }
+
+  /* WhatsApp floating button */
+  #whatsappBtn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background: #25d366;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  #whatsappBtn img {
+    width: 32px;
+    height: 32px;
+  }
+  @media(max-width: 600px) {
+    .subject-card {
+      flex: 1 1 calc(50% - 1rem);
+      min-width: unset;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>NEET PG Quiz</div>
+  <button id="logoutBtn">Logout</button>
+</header>
+
+<main>
+  <h1>Select Subject</h1>
+
+  <div class="year-section" id="year1">
+    <div class="year-title">1st Year</div>
+    <div class="subjects-grid"></div>
+  </div>
+  <div class="year-section" id="year2">
+    <div class="year-title">2nd Year</div>
+    <div class="subjects-grid"></div>
+  </div>
+  <div class="year-section" id="year3">
+    <div class="year-title">3rd Year</div>
+    <div class="subjects-grid"></div>
+  </div>
+  <div class="year-section" id="finalYear">
+    <div class="year-title">Final Year</div>
+    <div class="subjects-grid"></div>
+  </div>
+
+  <button id="razorpayBtn" disabled>Unlock All Subjects ₹99</button>
+</main>
+
+<!-- WhatsApp floating button -->
+<a href="https://wa.me/919431328569" target="_blank" id="whatsappBtn" title="Contact Help via WhatsApp">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
+</a>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script type="module">
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDr3_9dpo55esyfpkwsAjfFi_1KMu0ZDrU",
+    authDomain: "neet-88499.firebaseapp.com",
+    projectId: "neet-88499",
+    storageBucket: "neet-88499.firebasestorage.app",
+    messagingSenderId: "889163298965",
+    appId: "1:889163298965:web:fbae28b0ba478cff2f839c",
+    measurementId: "G-GEG090K2JQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const subjectsData = [
+    { year: 'year1', name: 'Anatomy', key: 'anatomy', free: true },
+    { year: 'year1', name: 'Physiology', key: 'physiology' },
+    { year: 'year1', name: 'Biochemistry', key: 'biochemistry' },
+
+    { year: 'year2', name: 'Pathology', key: 'pathology' },
+    { year: 'year2', name: 'Pharmacology', key: 'pharmacology' },
+    { year: 'year2', name: 'Microbiology', key: 'microbiology' },
+    { year: 'year2', name: 'Forensic Medicine', key: 'forensic' },
+
+    { year: 'year3', name: 'Community Medicine', key: 'community' },
+    { year: 'year3', name: 'ENT', key: 'ent' },
+    { year: 'year3', name: 'Ophthalmology', key: 'ophthalmology' },
+
+    { year: 'finalYear', name: 'General Medicine', key: 'medicine' },
+    { year: 'finalYear', name: 'General Surgery', key: 'surgery' },
+    { year: 'finalYear', name: 'Obstetrics & Gynaecology', key: 'obgyn' },
+    { year: 'finalYear', name: 'Pediatrics', key: 'pediatrics' },
+    { year: 'finalYear', name: 'Orthopaedics', key: 'orthopaedics' },
+    { year: 'finalYear', name: 'Dermatology', key: 'dermatology' },
+    { year: 'finalYear', name: 'Psychiatry', key: 'psychiatry' },
+    { year: 'finalYear', name: 'Respiratory Medicine', key: 'respiratory' },
+    { year: 'finalYear', name: 'Anesthesiology', key: 'anesthesiology' },
+  ];
+
+  let user = null;
+  let userProgress = {};
+  let isPaid = false;
+  const adminEmail = 'y3knishu@gmail.com';
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  const razorpayBtn = document.getElementById('razorpayBtn');
+
+  logoutBtn.onclick = () => {
+    signOut(auth).then(() => {
+      window.location.href = 'login.html';
+    });
+  };
+
+  razorpayBtn.onclick = () => {
+    if (!user) return alert('Please login first');
+    var options = {
+      "key": "rzp_live_7nZptAUoDrsfRb",
+      "amount": "9900", // 99 INR in paise
+      "currency": "INR",
+      "name": "NEET PG Quiz",
+      "description": "Unlock all paid subjects",
+      "handler": async function (response) {
+        // Mark user paid in Firestore
+        await setDoc(doc(db, 'users', user.uid), { email: user.email, paid: true }, { merge: true });
+        alert("Payment successful! All subjects unlocked.");
+        isPaid = true;
+        renderSubjects();
+        razorpayBtn.disabled = true;
+      },
+      "prefill": {
+        "email": user.email,
+      },
+      "theme": {
+        "color": "#f37254"
+      }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+  };
+
+  function createSubjectCard(subject, index) {
+    const card = document.createElement('div');
+    card.classList.add('subject-card');
+    card.classList.add(`color-${index % 19}`);
+
+    const nameEl = document.createElement('div');
+    nameEl.classList.add('subject-name');
+    nameEl.textContent = subject.name;
+    card.appendChild(nameEl);
+
+    // Progress bars container
+    const progressBarContainer = document.createElement('div');
+    progressBarContainer.classList.add('progress-bar');
+    card.appendChild(progressBarContainer);
+
+    // Correct, wrong, unattempted bars inside
+    const correctBar = document.createElement('div');
+    correctBar.classList.add('progress-correct');
+    progressBarContainer.appendChild(correctBar);
+
+    const wrongBar = document.createElement('div');
+    wrongBar.classList.add('progress-wrong');
+    progressBarContainer.appendChild(wrongBar);
+
+    const unattemptedBar = document.createElement('div');
+    unattemptedBar.classList.add('progress-unattempted');
+    progressBarContainer.appendChild(unattemptedBar);
+
+    // Score text
+    const scoreText = document.createElement('div');
+    scoreText.classList.add('subject-score');
+    card.appendChild(scoreText);
+
+    // Check if subject locked
+    const locked = !subject.free && !isPaid && user.email !== adminEmail;
+    if (locked) card.classList.add('locked');
+
+    card.onclick = () => {
+      if (locked) {
+        alert('This subject is locked. Please unlock all subjects by payment.');
+        return;
+      }
+      window.location.href = `quiz.html?subject=${subject.key}`;
+    };
+
+    // Fill progress bars & text if progress available
+    if (userProgress && userProgress[subject.key]) {
+      const prog = userProgress[subject.key];
+      const total = prog.totalQuestions || 0;
+      const correct = prog.correct || 0;
+      const wrong = prog.wrong || 0;
+      const attempted = prog.attempted || 0;
+      if (total > 0) {
+        correctBar.style.width = `${(correct / total) * 100}%`;
+        wrongBar.style.width = `${(wrong / total) * 100}%`;
+        unattemptedBar.style.width = `${((total - attempted) / total) * 100}%`;
+        scoreText.textContent = `Attempted: ${attempted} | Correct: ${correct} | Wrong: ${wrong}`;
+      }
+    }
+
+    return card;
+  }
+
+  async function fetchUserProgress() {
+    if (!user) return;
+    const progressDoc = await getDoc(doc(db, 'progress', user.uid));
+    if (progressDoc.exists()) {
+      userProgress = progressDoc.data();
+    } else {
+      userProgress = {};
+    }
+  }
+
+  async function fetchUserPaidStatus() {
+    if (!user) return false;
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      return data.paid === true;
+    }
+    return false;
+  }
+
+  async function renderSubjects() {
+    // Clear all grids first
+    ['year1', 'year2', 'year3', 'finalYear'].forEach(yid => {
+      const grid = document.querySelector(`#${yid} .subjects-grid`);
+      grid.innerHTML = '';
+    });
+
+    // Render cards in respective years
+    subjectsData.forEach((subj, idx) => {
+      const card = createSubjectCard(subj, idx);
+      document.querySelector(`#${subj.year} .subjects-grid`).appendChild(card);
+    });
+  }
+
+  onAuthStateChanged(auth, async (usr) => {
+    if (!usr) {
+      window.location.href = 'login.html';
+      return;
+    }
+    user = usr;
+    isPaid = await fetchUserPaidStatus();
+
+    // Enable/disable razorpay button
+    razorpayBtn.disabled = isPaid || user.email === adminEmail;
+
+    // Fetch progress
+    await fetchUserProgress();
+
+    // Render subjects
+    renderSubjects();
+  });
+</script>
+
+</body>
+</html>
